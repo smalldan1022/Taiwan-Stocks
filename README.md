@@ -3,7 +3,7 @@
 [![Website MyProfile](https://img.shields.io/website/http/huggingface.co/transformers/index.html.svg?down_color=red&down_message=offline&up_message=online)](https://github.com/smalldan1022)
 
 
-抓取台灣上市櫃的盤後資料，包括價格、以及法人的成交量資訊。目前提供的功能有將爬取的資料存進去 MySQL資料庫中，並且畫出 K線圖以及 5MA、10MA、20MA線圖，K線圖的下方有成交量，以及三大法人的成交量，很適合盤後拿來判斷股票進出場。
+抓取台灣上市櫃公司的盤後資料，包括價格、以及法人的成交量資訊。目前提供的功能有將爬取的資料存進去 MySQL資料庫中，並且畫出 K線圖以及 5MA、10MA、20MA線圖，K線圖的下方有成交量，以及三大法人的成交量，很適合盤後拿來判斷股票進出場。
 
 ##### *Hint 1 : 證交所有 request limit, 目前測試 5秒爬一次比較安全，時間間隔太短的話會被 ban掉，如果有好的方法可以躲的話也歡迎提供 !!*
 ##### *Hint 2 : 櫃買中心在爬資料的時候會比證交所的還要慢，目前還不確定是甚麼原因，如果有人知道的話歡迎來信跟我討論 !!*
