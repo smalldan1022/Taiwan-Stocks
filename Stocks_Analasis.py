@@ -87,12 +87,12 @@ class Stocks_Analasis(SC.Stocks_Crawl):
     def Dependency(self, IT_flag = False, IT_stocks_number = 50, FI_flag = False, FI_stocks_number = 100, 
                          DL_flag = False, DL_stocks_number = 10, date_interval = 3, value_date_interval = 2):
         
-        return "目前不開放此功能，如有需要歡迎來信"
+        print("目前不開放此功能，如有需要歡迎來信")
         
         
     def Cal_dependency(self, buying_number, stocks_number, date_interval=3, value_date_interval = 2):
 
-        return "目前不開放此功能，如有需要歡迎來信"
+        print("目前不開放此功能，如有需要歡迎來信")
     
     
     # UTILITIES
