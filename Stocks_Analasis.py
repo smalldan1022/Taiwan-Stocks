@@ -20,7 +20,6 @@ class Stocks_Analasis(SC.Stocks_Crawl):
 
         print( "\n  {}".format("(5) Calculating the SPRR") )
         print("----------------------------------------")
-
         
     
     # CALCULATING
