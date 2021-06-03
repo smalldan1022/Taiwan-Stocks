@@ -1,0 +1,32 @@
+import Taiwan_Stocks as TS
+
+# If you don't have the MySQL database, just simply set
+# db_settings = None
+# MySQL_flag = False
+# Fetch_stock_statistics_flag = False
+
+
+db_settings = { "host": "127.0.0.1",
+                "port": 3306,
+                "user": "root",
+                "password": "gej04m3andy",
+                "db": "stocks",
+                "charset": "utf8" }
+
+# Crawl stock data, save data into MySQL, fetch data from MySQL
+stocks = TS.Taiwan_Stocks( db_settings = db_settings, Crawl_flag = True, MySQL_flag = True, 
+                           Fetch_stock_statistics_flag = False, timesleep = 5)
+
+# Draw plots
+stocks.draw_plots( D_5MA=True, D_10MA = True, D_20MA = True, D_IT=True, D_FI=True, D_DL=True, 
+                   save_fig=False, fig_name="", save_path="")
+
+# Calculate the stock's dependency
+stocks.Dependency( IT_flag = True, IT_stocks_number = 50, FI_flag = True, FI_stocks_number = 100, 
+                   DL_flag = True, DL_stocks_number = 4, date_interval = 3, value_date_interval = 2)
+
+
+
+print("\n  {}".format("(6) Closing the program")) 
+print("----------------------------------------")   
+print("\nProgram Finished...\n") 
