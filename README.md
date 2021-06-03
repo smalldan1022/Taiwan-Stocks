@@ -80,7 +80,7 @@ stocks = TS.Taiwan_Stocks( db_settings = db_settings, Crawl_flag = False, MySQL_
                            Fetch_stock_statistics_flag = True, timesleep = 5)
 ```
 
-## Advance statistics or plots
+## Advanced statistics or plots
 
 ### *皆使用 Stocks.py*
 ### *1. 畫出圖表 - 可繪製線圖、 繪製法人成交量、儲存成圖片*
