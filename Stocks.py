@@ -9,8 +9,8 @@ import Taiwan_Stocks as TS
 db_settings = { "host": "127.0.0.1",
                 "port": 3306,
                 "user": "root",
-                "password": "gej04m3andy",
-                "db": "stocks",
+                "password": "YOUR-PASSWORD-HERE!!",
+                "db": "YOUR-DATABASE_NAME_HERE!!",
                 "charset": "utf8" }
 
 # Crawl stock data, save data into MySQL, fetch data from MySQL
