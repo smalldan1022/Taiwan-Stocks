@@ -140,7 +140,9 @@ stocks.draw_plots( D_5MA=True, D_10MA = True, D_20MA = True, D_IT=True, D_FI=Tru
 
 ## 聯絡方式
 
-有任何問題歡迎來信[信箱](#asign1022@gmail.com)，會盡快回覆 !
+有任何問題歡迎來信，會盡快回覆 !
+
+*信箱 : asign1022@gmail.com*
 
 ## 免責聲明
 
