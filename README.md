@@ -84,6 +84,9 @@ stocks = TS.Taiwan_Stocks( db_settings = db_settings, Crawl_flag = False, MySQL_
 ### *1. 畫出圖表 - 可繪製線圖、 繪製法人成交量、儲存成圖片*
 
 ```python
+stocks = TS.Taiwan_Stocks( db_settings = db_settings, Crawl_flag = True, MySQL_flag = True, 
+                           Fetch_stock_statistics_flag = True, timesleep = 5)
+                           
 stocks.draw_plots( D_5MA=True, D_10MA = True, D_20MA = True, D_IT=True, D_FI=True, D_DL=True, save_fig=False, 
                    fig_name="", save_path="")
 
