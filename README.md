@@ -10,7 +10,7 @@
 
 
 
-![html](https://github.com/smalldan1022/Taiwan-Stocks/blob/main/pictures/Stocks.html)
+![image](https://github.com/smalldan1022/Taiwan-Stocks/blob/main/pictures/Stocks.png)
 
 * 此為示意圖，雖然最下面的日期數字是直行，但用此程式會在 chrome端直接開一個 local page秀出這張圖表，滑鼠游標點上去會有相關的日期，非常方便。
 
