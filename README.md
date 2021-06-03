@@ -86,7 +86,7 @@ stocks = TS.Taiwan_Stocks( db_settings = db_settings, Crawl_flag = False, MySQL_
 ```python
 stocks = TS.Taiwan_Stocks( db_settings = db_settings, Crawl_flag = True, MySQL_flag = True, 
                            Fetch_stock_statistics_flag = True, timesleep = 5)
-                           
+
 stocks.draw_plots( D_5MA=True, D_10MA = True, D_20MA = True, D_IT=True, D_FI=True, D_DL=True, save_fig=False, 
                    fig_name="", save_path="")
 
@@ -120,7 +120,7 @@ stocks.draw_plots( D_5MA=True, D_10MA = True, D_20MA = True, D_IT=True, D_FI=Tru
 * 儲存成圖片
 ```python
 stocks.draw_plots( D_5MA=True, D_10MA = True, D_20MA = True, D_IT=True, D_FI=True, D_DL=True, 
-                   save_fig=True, fig_name="XXX",save_path="C:\Users\GitHub_projects\Side_project_1.stocks")
+                   save_fig=True, fig_name="XXX.png",save_path="C:/Users/GitHub_projects/Side_project_1.stocks")
 
 ```
 ### *2. 買賣策略 - ( Algorithm )*
