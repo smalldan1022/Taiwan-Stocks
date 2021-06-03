@@ -100,6 +100,6 @@ class Stocks_Analasis(SC.Stocks_Crawl):
     def save_csv(self, save_path, filename, stocks = False, institutional_investors = False):
         
         if stocks:
-            self.df_stocks.to_csv(save_path+filename)
+            self.df_stocks.to_csv(save_path + filename)
         if institutional_investors:
-            self.df_institutional_investors.to_csv(save_path+filename)
+            self.df_institutional_investors.to_csv(save_path + filename)
