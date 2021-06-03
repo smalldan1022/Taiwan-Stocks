@@ -1,9 +1,6 @@
 # 台灣上市上櫃公司盤後股票資料抓取分析
 
-
-[![Logo](https://github.com/smalldan1022/Corneal-ulcer/blob/master/pictures/CAIM.jpg)](https://www1.cgmh.org.tw/intr/intr2/c3sf00/caim/home/index)
-
-[![Website online](https://img.shields.io/website/http/huggingface.co/transformers/index.html.svg?down_color=red&down_message=offline&up_message=online)](https://www1.cgmh.org.tw/intr/intr2/c3sf00/caim/home/news)
+[![Website MyProfile](https://img.shields.io/website/http/huggingface.co/transformers/index.html.svg?down_color=red&down_message=offline&up_message=online)](https://github.com/smalldan1022)
 
 
 
