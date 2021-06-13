@@ -100,8 +100,8 @@ class Stocks_Draw(SA.Stocks_Analasis):
             self.Draw_Bar(buying_number = self.DL_num, name = "自營商")
 
         if save_fig and fig_name != "" and save_path != "":
-            # self.fig.write_image(save_path + fig_name + ".html", format='html')
-            self.fig.write_html(save_path + fig_name + ".html", include_plotlyjs="cdn")
+            self.fig.write_image(save_path + fig_name + ".png", format='png')
+            # self.fig.write_html(save_path + fig_name + ".html", include_plotlyjs="cdn")
         
         self.fig.show()
         
