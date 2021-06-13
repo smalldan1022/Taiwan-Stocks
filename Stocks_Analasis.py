@@ -18,8 +18,9 @@ class Stocks_Analasis(SC.Stocks_Crawl):
         self.Cal_Foreign_Investor()
         self.Cal_Dealer()
 
-        print( "\n  {}".format("(5) Calculating the SPRR") )
+        print( "\n  {}".format("(5) Analyzing the stocks") )
         print("----------------------------------------")
+
         
     
     # CALCULATING
@@ -83,23 +84,42 @@ class Stocks_Analasis(SC.Stocks_Crawl):
         return self.df_stocks[self.df_stocks.Date==stock_day]["收盤價"]
         
     
-    def Dependency(self, IT_flag = False, IT_stocks_number = 50, FI_flag = False, FI_stocks_number = 100, 
-                         DL_flag = False, DL_stocks_number = 10, date_interval = 3, value_date_interval = 2):
+  
+    
+    def Stand_Up_On_MAs(self):
         
-        print("目前不開放此功能，如有需要歡迎來信")
-        
-        
-    def Cal_dependency(self, buying_number, stocks_number, date_interval=3, value_date_interval = 2):
+        print("\n{}".format("Stand_Up_On_MAs:"))
 
-        print("目前不開放此功能，如有需要歡迎來信")
-    
-    
+        # 抓出所需data
+
+        # print(type(self.df_stocks['收盤價'].astype(float)))
+        stock_price = self.df_stocks['收盤價'].astype(float).iloc[-1]
+        MA5 = self.MA5.iloc[-1] if not self.MA5.isnull().values.all() else 0
+        MA10 = self.MA10.iloc[-1] if not self.MA10.isnull().values.all() else 0
+        MA20 = self.MA20.iloc[-1] if not self.MA20.isnull().values.all() else 0
+        MA60 = self.MA60.iloc[-1] if not self.MA60.isnull().values.all() else 0
+
+        four_flag = True if MA5 and MA10 and MA20 and MA60 and max(stock_price, MA5, MA10, MA20, MA60) == stock_price else False
+
+        three_flag = True if MA5 and MA10 and MA20 and max(stock_price, MA5, MA10, MA20) == stock_price else False
+
+
+        # 判斷data值
+
+        if four_flag:
+
+            print("股價已站上所有均線，為四海遊龍型股票!!")
+
+        elif three_flag:
+
+            print("股價已站上5日、10日、20日均線，為三陽型股票!!")
+
     # UTILITIES
     #############################################
     
     def save_csv(self, save_path, filename, stocks = False, institutional_investors = False):
         
         if stocks:
-            self.df_stocks.to_csv(save_path + filename)
+            self.df_stocks.to_csv(save_path+filename)
         if institutional_investors:
-            self.df_institutional_investors.to_csv(save_path + filename)
+            self.df_institutional_investors.to_csv(save_path+filename)
