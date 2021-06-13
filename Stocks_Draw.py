@@ -10,13 +10,19 @@ class Stocks_Draw(SA.Stocks_Analasis):
 
         super().__init__(**kwargs)
 
+        
+        self.MA5 = 0
+        self.MA10 = 0
+        self.MA20 = 0
+        self.MA60 = 0
+
         self.row = 1
         self.fig = None
 
     # DRAWING
     #############################################
         
-    def draw_plots(self, K_plot = True, D_5MA=False, D_10MA = False, D_20MA = False, D_IT=False, D_FI=False, D_DL=False, 
+    def draw_plots(self, K_plot = True, D_5MA=False, D_10MA = False, D_20MA = False, D_60MA = False, D_IT=False, D_FI=False, D_DL=False, 
                    save_fig=False, fig_name="", save_path=""):
         
         
@@ -78,11 +84,13 @@ class Stocks_Draw(SA.Stocks_Analasis):
 
         
         if D_5MA:
-            self.draw_MA(day_interval=5, marker = dict(color = '#FF9224'))
+            self.MA5 = self.draw_MA(day_interval=5, marker = dict(color = '#FF9224'))
         if D_10MA:
-            self.draw_MA(day_interval=10, marker = dict(color = '#E800E8'))
+            self.MA10 = self.draw_MA(day_interval=10, marker = dict(color = '#E800E8'))
         if D_20MA:
-            self.draw_MA(day_interval=20, marker = dict(color = '#7373B9'))
+            self.MA20 = self.draw_MA(day_interval=20, marker = dict(color = '#7373B9'))
+        if D_60MA:
+            self.MA60 = self.draw_MA(day_interval=60, marker = dict(color = '#00CACA'))
         
         if D_IT:    
             self.Draw_Bar(buying_number = self.IT_num, name = "投信")
@@ -92,7 +100,8 @@ class Stocks_Draw(SA.Stocks_Analasis):
             self.Draw_Bar(buying_number = self.DL_num, name = "自營商")
 
         if save_fig and fig_name != "" and save_path != "":
-            self.fig.write_image(save_path + fig_name + ".png", format='png')
+            # self.fig.write_image(save_path + fig_name + ".html", format='html')
+            self.fig.write_html(save_path + fig_name + ".html", include_plotlyjs="cdn")
         
         self.fig.show()
         
@@ -107,6 +116,8 @@ class Stocks_Draw(SA.Stocks_Analasis):
                                 showlegend = True )
             
         self.fig.add_trace(figure_MA, 1, 1, secondary_y = True)
+
+        return MA
 
     def Draw_Bar(self, buying_number, name = ""):
 
