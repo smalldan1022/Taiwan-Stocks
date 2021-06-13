@@ -162,8 +162,13 @@ stocks.draw_plots( D_5MA=True, D_10MA = True, D_20MA = True, D_IT=True, D_FI=Tru
 
 ## Updates
 
+### 2021-06-13:
+- 更新 [Demo](#這邊有實際的圖表demo-) : 讓大家能直接看圖表結果
+
+- 更新 [Quick Start](#quick-start) : 新增參數細節說明，讓大家在使用上更方便 
+
 ### 2021-06-03: 
-更新 [2. 買賣策略 - ( Algorithm )](#2-買賣策略----algorithm-)，目前暫不提供自行開發的 algorithm。
+- 更新 [2. 買賣策略 - ( Algorithm )](#2-買賣策略----algorithm-) : 目前仍在調整自行開發的 algorithm，如有興趣或想要一起討論，歡迎來信。
 
 
 ## 聯絡方式
