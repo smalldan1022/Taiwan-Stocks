@@ -20,7 +20,6 @@ class Stocks_Analasis(SC.Stocks_Crawl):
 
         print( "\n  {}".format("(5) Analyzing the stocks") )
         print("----------------------------------------")
-
         
     
     # CALCULATING
@@ -94,8 +93,6 @@ class Stocks_Analasis(SC.Stocks_Crawl):
         print("\n{}".format("Stand_Up_On_MAs:"))
 
         # 抓出所需data
-
-        # print(type(self.df_stocks['收盤價'].astype(float)))
         stock_price = self.df_stocks['收盤價'].astype(float).iloc[-1]
         MA5 = self.MA5.iloc[-1] if not self.MA5.isnull().values.all() else 0
         MA10 = self.MA10.iloc[-1] if not self.MA10.isnull().values.all() else 0
@@ -103,18 +100,12 @@ class Stocks_Analasis(SC.Stocks_Crawl):
         MA60 = self.MA60.iloc[-1] if not self.MA60.isnull().values.all() else 0
 
         four_flag = True if MA5 and MA10 and MA20 and MA60 and max(stock_price, MA5, MA10, MA20, MA60) == stock_price else False
-
         three_flag = True if MA5 and MA10 and MA20 and max(stock_price, MA5, MA10, MA20) == stock_price else False
 
-
         # 判斷data值
-
         if four_flag:
-
             print("股價已站上所有均線，為四海遊龍型股票!!")
-
         elif three_flag:
-
             print("股價已站上5日、10日、20日均線，為三陽型股票!!")
 
     # UTILITIES
