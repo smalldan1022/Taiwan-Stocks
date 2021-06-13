@@ -68,7 +68,7 @@ stocks = TS.Taiwan_Stocks( db_settings = db_settings, Crawl_flag = True, MySQL_f
 db_settings = { "host": "127.0.0.1",
                 "port": 3306,
                 "user": "root",
-                "password": "YOUR-PASSWORD-HERE!!",       <- 輸入你的資料庫密碼
+                "password": "YOUR-PASSWORD-HERE!!",        <- 輸入你的資料庫密碼
                 "db": "YOUR-DATABASE-SCHEMA-NAME-HERE!!",  <- 輸入你創建的資料庫名字
                 "charset": "utf8" }
 
@@ -91,7 +91,7 @@ stocks = TS.Taiwan_Stocks( db_settings = None, Crawl_flag = True, MySQL_flag = F
 db_settings = { "host": "127.0.0.1",
                 "port": 3306,
                 "user": "root",
-                "password": "YOUR-PASSWORD-HERE!!",       <- 輸入你的資料庫密碼
+                "password": "YOUR-PASSWORD-HERE!!",        <- 輸入你的資料庫密碼
                 "db": "YOUR-DATABASE-SCHEMA-NAME-HERE!!",  <- 輸入你創建的資料庫名字
                 "charset": "utf8" }
 
