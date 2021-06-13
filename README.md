@@ -141,7 +141,7 @@ stocks.draw_plots( D_5MA=True, D_10MA = True, D_20MA = True, D_IT=True, D_FI=Tru
 * 儲存成圖片
 ```python
 stocks.draw_plots( D_5MA=True, D_10MA = True, D_20MA = True, D_IT=True, D_FI=True, D_DL=True, 
-                   save_fig=True, fig_name="XXX.png",save_path="C:/Users/GitHub_projects/Side_project_1.stocks")
+                   save_fig=True, fig_name="XXX",save_path="C:/Users/GitHub_projects/Side_project_1.stocks")
 
 ```
 ### *2. 買賣策略 - ( Algorithm )*
