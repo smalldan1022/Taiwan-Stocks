@@ -63,6 +63,13 @@ stocks = TS.Taiwan_Stocks( db_settings = db_settings, Crawl_flag = True, MySQL_f
 ### 1.  如果要存到 MySQL database
 
 ``` python
+db_settings = { "host": "127.0.0.1",
+                "port": 3306,
+                "password": "YOUR-PASSWORD-HERE!!",       <- 輸入你的資料庫密碼
+                "db": "YOUR-DATABASE-TABLE-NAME-HERE!!",  <- 輸入你創建的表名
+                "db": "stocks",                           <- 輸入你創建的資料庫名字
+                "charset": "utf8" }
+
 stocks = TS.Taiwan_Stocks( db_settings = db_settings, Crawl_flag = True, MySQL_flag = True, 
                            Fetch_stock_statistics_flag = True, timesleep = 5)
 ```
@@ -70,12 +77,22 @@ stocks = TS.Taiwan_Stocks( db_settings = db_settings, Crawl_flag = True, MySQL_f
 ### 2. 如果沒有要存到MySQL database，純爬蟲下來分析
 
 ``` python
+db_settings = None
+
 stocks = TS.Taiwan_Stocks( db_settings = None, Crawl_flag = True, MySQL_flag = False, 
                            Fetch_stock_statistics_flag = False, timesleep = 5)
 ```
 ### 3. 如果MySQL database已有資料，純分析
 
 ``` python
+
+db_settings = { "host": "127.0.0.1",
+                "port": 3306,
+                "password": "YOUR-PASSWORD-HERE!!",       <- 輸入你的資料庫密碼
+                "db": "YOUR-DATABASE-TABLE-NAME-HERE!!",  <- 輸入你創建的表名
+                "db": "stocks",                           <- 輸入你創建的資料庫名字
+                "charset": "utf8" }
+
 stocks = TS.Taiwan_Stocks( db_settings = db_settings, Crawl_flag = False, MySQL_flag = False, 
                            Fetch_stock_statistics_flag = True, timesleep = 5)
 ```
