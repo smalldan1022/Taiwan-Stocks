@@ -8,7 +8,7 @@
 ##### *Hint 1 : 證交所有 request limit, 目前測試 5秒爬一次比較安全，時間間隔太短的話會被 ban掉，如果有好的方法可以躲的話也歡迎提供 !!*
 ##### *Hint 2 : 櫃買中心在爬資料的時候會比證交所的還要慢，目前還不確定是甚麼原因，如果有人知道的話歡迎來信跟我討論 !!*
 
-* [Demo](https://github.com/smalldan1022/Taiwan-Stocks/blob/main/pictures/index.html)
+* 這邊有實際的圖表 [Demo](https://nbviewer.jupyter.org/github/smalldan1022/Taiwan-Stocks/blob/main/pictures/index.html)
 
 ![image](https://github.com/smalldan1022/Taiwan-Stocks/blob/main/pictures/Stocks.png)
 
