@@ -83,7 +83,10 @@ class Stocks_Analasis(SC.Stocks_Crawl):
         """
         return self.df_stocks[self.df_stocks.Date==stock_day]["收盤價"]
         
-    
+    def Dependency(self, IT_flag = False, IT_stocks_number = 50, FI_flag = False, FI_stocks_number = 100, 
+                         DL_flag = False, DL_stocks_number = 10, date_interval = 3, value_date_interval = 2):
+
+        print("This feature is currently not available !!")
   
     
     def Stand_Up_On_MAs(self):
