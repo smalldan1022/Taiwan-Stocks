@@ -146,12 +146,18 @@ stocks.draw_plots( D_5MA=True, D_10MA = True, D_20MA = True, D_IT=True, D_FI=Tru
 ```
 ### *2. 買賣策略 - ( Algorithm )*
 
+*Hint : 皆在 Stocks.py 裡操作*
 
  1. 短線 - 針對站上5MA、10MA、20MA的三陽開泰型股票進行買進
-    * 最近由於盤勢復甦，這類型的股票有肉可吃，最近正在加緊開發
+
+   ```python
+   stocks.Stand_Up_On_MAs()
+   ```
 
  2. 中長線 - 針對站上5MA、10MA、20MA、60MA的四海遊龍型股票進行買進
-    * 開發中
+   ```python
+   stocks.Stand_Up_On_MAs()
+   ```
 
  3. 針對法人現金流向而做的買賣策略 
     * 曾經以此選股方式在今年三月選到 IC設計飆股-天鈺
@@ -161,6 +167,9 @@ stocks.draw_plots( D_5MA=True, D_10MA = True, D_20MA = True, D_IT=True, D_FI=Tru
 
 
 ## Updates
+
+### 2021-06-14:
+- 更新 [2. 買賣策略 - ( Algorithm ) 1. 2. ](#2-買賣策略----algorithm-) : 功能已完成
 
 ### 2021-06-13:
 - 更新 [Demo](#這邊有實際的圖表demo-) : 讓大家能直接看圖表結果並操作看看 ( 互動式圖表 )
