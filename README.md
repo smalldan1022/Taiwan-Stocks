@@ -67,9 +67,9 @@ stocks = TS.Taiwan_Stocks( db_settings = db_settings, Crawl_flag = True, MySQL_f
 ``` python
 db_settings = { "host": "127.0.0.1",
                 "port": 3306,
+                "user": "root",
                 "password": "YOUR-PASSWORD-HERE!!",       <- 輸入你的資料庫密碼
-                "db": "YOUR-DATABASE-TABLE-NAME-HERE!!",  <- 輸入你創建的表名
-                "db": "stocks",                           <- 輸入你創建的資料庫名字
+                "db": "YOUR-DATABASE-SCHEMA-NAME-HERE!!",  <- 輸入你創建的資料庫名字
                 "charset": "utf8" }
 
 stocks = TS.Taiwan_Stocks( db_settings = db_settings, Crawl_flag = True, MySQL_flag = True, 
@@ -90,9 +90,9 @@ stocks = TS.Taiwan_Stocks( db_settings = None, Crawl_flag = True, MySQL_flag = F
 
 db_settings = { "host": "127.0.0.1",
                 "port": 3306,
+                "user": "root",
                 "password": "YOUR-PASSWORD-HERE!!",       <- 輸入你的資料庫密碼
-                "db": "YOUR-DATABASE-TABLE-NAME-HERE!!",  <- 輸入你創建的表名
-                "db": "stocks",                           <- 輸入你創建的資料庫名字
+                "db": "YOUR-DATABASE-SCHEMA-NAME-HERE!!",  <- 輸入你創建的資料庫名字
                 "charset": "utf8" }
 
 stocks = TS.Taiwan_Stocks( db_settings = db_settings, Crawl_flag = False, MySQL_flag = False, 
@@ -163,7 +163,7 @@ stocks.draw_plots( D_5MA=True, D_10MA = True, D_20MA = True, D_IT=True, D_FI=Tru
 ## Updates
 
 ### 2021-06-13:
-- 更新 [Demo](#這邊有實際的圖表demo-) : 讓大家能直接看圖表結果
+- 更新 [Demo](#這邊有實際的圖表demo-) : 讓大家能直接看圖表結果並操作看看 ( 互動式圖表 )
 
 - 更新 [Quick Start](#quick-start) : 新增參數細節說明，讓大家在使用上更方便 
 
