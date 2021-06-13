@@ -25,7 +25,7 @@ stocks.draw_plots( D_5MA=True, D_10MA = True, D_20MA = True, D_IT=True, D_FI=Tru
 stocks.Dependency( IT_flag = True, IT_stocks_number = 50, FI_flag = True, FI_stocks_number = 100, 
                    DL_flag = True, DL_stocks_number = 4, date_interval = 3, value_date_interval = 2)
 
-
+stocks.Stand_Up_On_MAs()
 
 print("\n  {}".format("(6) Closing the program")) 
 print("----------------------------------------")   
