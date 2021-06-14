@@ -1,5 +1,6 @@
 import Stocks_Analasis as SA
 import pandas as pd
+import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
@@ -11,10 +12,10 @@ class Stocks_Draw(SA.Stocks_Analasis):
         super().__init__(**kwargs)
 
         
-        self.MA5 = 0
-        self.MA10 = 0
-        self.MA20 = 0
-        self.MA60 = 0
+        self.MA5 = pd.Series(data=np.nan, index=["1"])
+        self.MA10 = pd.Series(data=np.nan, index=["1"])
+        self.MA20 = pd.Series(data=np.nan, index=["1"])
+        self.MA60 = pd.Series(data=np.nan, index=["1"])
 
         self.row = 1
         self.fig = None
