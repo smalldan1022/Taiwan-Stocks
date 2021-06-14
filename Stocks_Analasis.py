@@ -85,6 +85,7 @@ class Stocks_Analasis(SC.Stocks_Crawl):
     def Dependency(self, IT_flag = False, IT_stocks_number = 50, FI_flag = False, FI_stocks_number = 100, 
                          DL_flag = False, DL_stocks_number = 10, date_interval = 3, value_date_interval = 2):
 
+        print("Dependency:")
         print("This feature is currently not available !!")
   
     
