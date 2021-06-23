@@ -168,6 +168,9 @@ stocks.draw_plots( D_5MA=True, D_10MA = True, D_20MA = True, D_IT=True, D_FI=Tru
 
 ## Updates
 
+### 2021-06-23:
+- 爬蟲股票殖利率、本益比、淨值比功能 ( ongoing )
+
 ### 2021-06-14:
 - 更新 [2. 買賣策略 - ( Algorithm ) 1. 2. ](#2-買賣策略----algorithm-) : 功能已完成
 
