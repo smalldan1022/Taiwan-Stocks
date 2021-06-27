@@ -168,6 +168,11 @@ stocks.draw_plots( D_5MA=True, D_10MA = True, D_20MA = True, D_IT=True, D_FI=Tru
 
 ## Updates
 
+### 2021-06-27:
+- 調整了Stock_Draw 的Plot圖表大小
+- 調整 Stocks_Crawl 的爬蟲方法、數據的合併方法以及存入Database的方法
+- 爬蟲股票殖利率、本益比、淨值比功能 - 完成
+
 ### 2021-06-23:
 - 爬蟲股票殖利率、本益比、淨值比功能 ( ongoing )
 
