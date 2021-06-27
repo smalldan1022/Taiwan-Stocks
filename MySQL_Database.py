@@ -43,6 +43,10 @@ class MySQL_Database:
                             `自營商賣出股數(避險)` char(100) DEFAULT NULL , 
                             `自營商買賣超股數(避險)` char(100) DEFAULT NULL ,
                             `三大法人買賣超股數` char(100) DEFAULT NULL ,
+                            `本益比` char(20) DEFAULT NULL,
+                            `股價淨值比` char(20) DEFAULT NULL,
+                            `殖利率` char(20) DEFAULT NULL,
+                            `股利年度` char(20) DEFAULT NULL, 
                         PRIMARY KEY (`Date`)
                         ) ENGINE=InnoDB DEFAULT CHARSET=utf8;""".format(self.table_name)
         self.db = None
