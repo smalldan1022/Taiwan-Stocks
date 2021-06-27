@@ -404,9 +404,7 @@ class Stocks_Crawl(MD.MySQL_Database):
 
             r = requests.get(url)
 
-            r = r.text
-
-            r = r.split("\n")
+            r = r.text.split("\n")
 
             df = pd.read_csv(StringIO("\n".join(r[3:-1]))).fillna(0)
 
