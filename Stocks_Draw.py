@@ -1,4 +1,4 @@
-import Stocks_Analasis_Algorithm as SA
+import Stocks_Analasis as SA
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
