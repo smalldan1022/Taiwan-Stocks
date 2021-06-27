@@ -1,4 +1,4 @@
-import Stocks_Analasis as SA
+import Stocks_Analasis_Algorithm as SA
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
@@ -12,7 +12,7 @@ class Stocks_Draw(SA.Stocks_Analasis):
         super().__init__(**kwargs)
 
         
-        self.MA5 = pd.Series(data=np.nan, index=["1"])
+        self.MA5 =  pd.Series(data=np.nan, index=["1"])
         self.MA10 = pd.Series(data=np.nan, index=["1"])
         self.MA20 = pd.Series(data=np.nan, index=["1"])
         self.MA60 = pd.Series(data=np.nan, index=["1"])
@@ -39,10 +39,10 @@ class Stocks_Draw(SA.Stocks_Analasis):
         self.fig = make_subplots(rows = subplot_nums, cols = 1, shared_xaxes = True,
                                  vertical_spacing = 0.027, horizontal_spacing = 0.009, 
                                  subplot_titles = subplot_titles, row_heights  = [0.65, 0.25, 0.25, 0.25 ],
-                                 specs=[[{"secondary_y": True}],[{"secondary_y": False}],[{"secondary_y": True}],[{"secondary_y": False}]] )
+                                 specs=[[{"secondary_y": True}],[{"secondary_y": False}],[{"secondary_y": False}],[{"secondary_y": False}]] )
         
         # 把figure的整理大小調大，並把Candlestick的下半部分拿掉，整體圖畫起來比較順
-        self.fig.update_layout( width=2000, height=3000, xaxis_rangeslider_visible = False,
+        self.fig.update_layout( width=1650, height=3000, xaxis_rangeslider_visible = False,
                                 title=dict( text='<b>{}-{}</b>'.format(self.table_name, self.stock_num), x=0.0387, y=0.99,
                                             font=dict( family="Arial", size=36, color='#000000' ) ), 
                                 font = dict(family="Arial", size=18) )
