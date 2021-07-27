@@ -100,14 +100,21 @@ class Stocks_Analasis(SC.Stocks_Crawl):
         MA20 = self.MA20.iloc[-1] if not self.MA20.isnull().values.all() else 0
         MA60 = self.MA60.iloc[-1] if not self.MA60.isnull().values.all() else 0
 
-        four_flag = True if MA5 and MA10 and MA20 and MA60 and max(stock_price, MA5, MA10, MA20, MA60) == stock_price else False
-        three_flag = True if MA5 and MA10 and MA20 and max(stock_price, MA5, MA10, MA20) == stock_price else False
+        four_MAs = MA5 and MA10 and MA20 and MA60
+        three_MAs = MA5 and MA10 and MA20
+        
+        four_flag = True if four_MAs and max(stock_price, MA5, MA10, MA20, MA60) == stock_price else False
+        three_flag = True if three_MAs and max(stock_price, MA5, MA10, MA20) == stock_price else False
 
         # 判斷data值
         if four_flag:
             print("股價已站上5日、10日、20日、60日均線均線，為四海遊龍型股票!!")
         elif three_flag:
             print("股價已站上5日、10日、20日均線，為三陽開泰型股票!!")
+        elif not four_MAs:
+            print("目前的data數量不足以畫出四條均線，請補足後再用此演算法!!")
+        elif not three_MAs:
+            print("目前的data數量不足以畫出三條均線，請補足後再用此演算法!!")
         else:
             print("目前股價尚未成三陽開泰型、四海遊龍型股票!!")
 
