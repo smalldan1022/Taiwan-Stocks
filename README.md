@@ -4,7 +4,7 @@
 
 從台灣證券交易所、證券櫃檯買賣中心，抓取台灣上市櫃公司的盤後資料，包括價格、以及法人的成交量資訊。目前提供的功能有將爬取的資料存進去 MySQL 資料庫中，並且畫出 K 線圖以及 5MA、10MA、20MA 線圖，K 線圖的下方有成交量，以及三大法人的成交量，很適合盤後拿來判斷股票進出場。
 
-### 這邊有實際的[圖表 Demo](https://nbviewer.jupyter.org/github/smalldan1022/Taiwan-Stocks/blob/main/index.html) !!
+### 這邊有實際的[圖表 Demo](https://nbviewer.jupyter.org/github/smalldan1022/Taiwan-Stocks/blob/main/pictures/index.html) !!
 
 ##### _Hint 1 : 證交所有 request limit, 目前測試 5 秒爬一次比較安全，時間間隔太短的話會被 ban 掉，如果有好的方法可以躲的話也歡迎提供 !!_
 
