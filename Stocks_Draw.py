@@ -149,13 +149,13 @@ class Stocks_Draw(SA.Stocks_Analasis):
                      width = 0.45, 
                      name = name,
                      marker_color = color, 
-                     showlegend = True)
+                     showlegend = False)
 
         Line = go.Scatter(x = self.df_stocks["Date"].to_numpy(),
                           y = buying_number,
                           mode = "lines", 
                           marker = marker,
-                          showlegend = True)
+                          showlegend = False)
 
         self.fig.add_trace(Bar, self.row, 1, secondary_y = False)
         # self.fig.add_trace(Line, self.row, 1, secondary_y = False)
