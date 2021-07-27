@@ -25,10 +25,6 @@ class Taiwan_Stocks(SD.Stocks_Draw):
         
         super().__init__(**kwargs)
 
-        
-
-        
-
     def time_calculate(self, start_time, end_time):
         
         start_year = int( start_time[:4] )
