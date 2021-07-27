@@ -1,4 +1,3 @@
-  
 import Taiwan_Stocks as TS
 
 # If you don't have the MySQL database, just simply set  <------ IMPORTANT MESSAGE
