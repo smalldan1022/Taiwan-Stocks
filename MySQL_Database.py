@@ -168,8 +168,8 @@ class MySQL_Database:
         self.df_institutional_investors["Date"] = self.df_institutional_investors["Date"].apply(lambda x:str(x))
 
         # 要篩選出日期區間內的data
-
-        assert int(self.dates[-1]) >= int(self.df_stocks.Date.min()) and int(self.dates[0]) <= int(self.df_stocks.Date.max()), "The data doesn't exist in this database!!"
+        assert not self.df_stocks.Date.empty, "This stock's data doesn't exist in this database!"
+        assert int(self.dates[-1]) >= int(self.df_stocks.Date.min()) and int(self.dates[0]) <= int(self.df_stocks.Date.max()), "This stock's data doesn't exist in this database!!"
 
         if int(self.dates[0]) <= int(self.df_stocks.Date.min()) or int(self.dates[-1]) >= int(self.df_stocks.Date.max()):
             
