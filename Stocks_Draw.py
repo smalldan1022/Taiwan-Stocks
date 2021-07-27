@@ -158,6 +158,6 @@ class Stocks_Draw(SA.Stocks_Analasis):
                           showlegend = True)
 
         self.fig.add_trace(Bar, self.row, 1, secondary_y = False)
-        self.fig.add_trace(Line, self.row, 1, secondary_y = False)
+        # self.fig.add_trace(Line, self.row, 1, secondary_y = False)
 
         self.row += 1
