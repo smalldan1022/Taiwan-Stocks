@@ -17,12 +17,11 @@ class Stocks_Crawl(db.MySQL):
         **kwargs,
     ):
         super().__init__(**kwargs)
-
         self.Crawl_flag = Crawl_flag
         self.MySQL_flag = MySQL_flag
         self.Fetch_stock_statistics_flag = Fetch_stock_statistics_flag
 
-        ################# 上櫃公司價格資料
+        # 上櫃公司價格資料
         self.url_tpex_stock = "http://www.tpex.org.tw/web/stock/aftertrading/daily_close_quotes/stk_quote_download.php?l=zh-tw&d="
         # self.tpex_df_stocks = pd.DataFrame( data = [],
         #                                     columns = ['Date', '證券代號', '證券名稱',
@@ -32,7 +31,7 @@ class Stocks_Crawl(db.MySQL):
         #                                                '收盤價', '漲跌(+/-)',
         #                                                '漲跌價差' ])
 
-        ################# 上櫃公司法人買賣資料
+        # 上櫃公司法人買賣資料
         self.url_tpex_df_institutional_investors = "https://www.tpex.org.tw/web/stock/3insti/daily_trade/3itrade_hedge_result.php?l=zh-tw&o=csv&se=EW&t=D&d="
         # self.tpex_df_institutional_investors = pd.DataFrame( data = [],
         #                                                      columns = ['證券代號', '證券名稱',
@@ -47,8 +46,7 @@ class Stocks_Crawl(db.MySQL):
         #                                                                 '自營商賣出股數(避險)', '自營商買賣超股數(避險)',
         #                                                                 '三大法人買賣超股數' ])
 
-        ################# 上市公司價格資料
-
+        # 上市公司價格資料
         self.url_stock = "https://www.twse.com.tw/exchangeReport/MI_INDEX?response=csv&date="
         self.df_stocks = pd.DataFrame(
             data=[],
@@ -68,8 +66,7 @@ class Stocks_Crawl(db.MySQL):
             ],
         )
 
-        ################# 上市公司法人買賣資料
-
+        # 上市公司法人買賣資料
         self.url_institutional_investors = "http://www.tse.com.tw/fund/T86?response=csv&date="
         self.df_institutional_investors = pd.DataFrame(
             data=[],
@@ -96,8 +93,7 @@ class Stocks_Crawl(db.MySQL):
             ],
         )
 
-        ################# 上市櫃公司股票本益比, 股價淨值比, 殖利率, 股利年度
-
+        # 上市櫃公司股票本益比, 股價淨值比, 殖利率, 股利年度
         self.df_statistics = pd.DataFrame(
             data=[], columns=["證券代號", "證券名稱", "本益比", "股價淨值比", "殖利率", "股利年度"]
         )
@@ -118,8 +114,6 @@ class Stocks_Crawl(db.MySQL):
             self.Close()
 
     # Change the date
-    #############################################
-
     def date_changer(self, date):
         year = date[:4]
         year = str(int(year) - 1911)
@@ -128,15 +122,12 @@ class Stocks_Crawl(db.MySQL):
 
         return year + "/" + month + "/" + day
 
-    # CRAWLING
-    #############################################
-
     def Crawl(self):
         # Start crawling data
         for date in self.dates:
             print(date + " starts crawling")
             try:
-                ################ 爬上櫃公司 ################
+                # 爬上櫃公司
                 if self.Flag_tpe_stocks:
                     ROC_era_date = self.date_changer(date)
                     # 股價資訊
@@ -164,7 +155,7 @@ class Stocks_Crawl(db.MySQL):
                     # 本益比, 股價淨值比, 殖利率(%), 股利年度
                     self.Crawl_PB_and_PE(ROC_era_date)
 
-                ################ 爬上市公司 ################
+                # 爬上市公司
                 if self.Flag_tsw_stocks:
                     # 股價資訊
                     self.Crawl_method(
@@ -204,12 +195,10 @@ class Stocks_Crawl(db.MySQL):
             time.sleep(self.timesleep)
 
         # 把所有資料concatenate起來
-        self.ConcatData()
+        self.concat_stock_data()
 
     # 抓取特定股票(使用者要抓的那支股票)
-    #############################################
-
-    def Get_specific_stock(self, df):
+    def get_stock(self, df):
         if self.stock_name != "":
             df = df[df["證券名稱"].apply(lambda x: x.replace(" ", "")) == self.stock_name]
 
@@ -222,9 +211,7 @@ class Stocks_Crawl(db.MySQL):
         return df
 
     # 重新命名col name, 確保一致
-    #############################################
-
-    def Rename_df_columns(self, df, Flag_tpex_stocks=False, Flag_tpex_insti_inv=False):
+    def rename_stock_columns(self, df, Flag_tpex_stocks=False, Flag_tpex_insti_inv=False):
         tpex_stocks_rename_columns = {
             "代號": "證券代號",
             "名稱": "證券名稱",
@@ -270,8 +257,6 @@ class Stocks_Crawl(db.MySQL):
         return df
 
     # 開始爬蟲
-    #############################################
-
     def Crawl_method(
         self,
         url,
@@ -286,36 +271,27 @@ class Stocks_Crawl(db.MySQL):
         # 下載股價
         r = requests.post(url + date + url_suffix)
 
-        # 整理資料，變成表格
-
+        # 整理資料, 變成表格
         if (
             not Flag_tpex_stocks
             and not Flag_tpex_insti_inv
             and not Flag_stocks
             and not Flag_insti_inv
         ):
-            print("Error...Crawling nothing, please set the flags right")
-            return 0
+            raise AttributeError, "Error...Crawling nothing, please set the flags right"  # noqa: E999
 
-        ######### 爬上櫃公司 #########
+        # 爬上櫃公司
 
         if Flag_tpex_stocks:
             df = pd.read_csv(StringIO(r.text), header=2).dropna(how="all", axis=1).dropna(how="any")
-
             df = df.iloc[:, :11]
-
-            df = self.Rename_df_columns(df, Flag_tpex_stocks=True, Flag_tpex_insti_inv=False)
-
-            df = self.Get_specific_stock(df)
-
+            df = self.rename_stock_columns(df, Flag_tpex_stocks=True, Flag_tpex_insti_inv=False)
+            df = self.get_stock(df)
             df.insert(0, "Date", Date)
-
             df.drop("均價 ", axis="columns", inplace=True)
-
             df["漲跌(+/-)"] = (
                 df["漲跌價差"].values[0][0] if df["漲跌價差"].values[0][0] != "0" else "X"
             )
-
             self.df_stocks = self.df_stocks.append(df, ignore_index=True)
 
         if Flag_tpex_insti_inv:
@@ -326,7 +302,6 @@ class Stocks_Crawl(db.MySQL):
             )
 
             df.insert(0, "Date", Date)
-
             df.drop(
                 columns=[
                     "自營商-買進股數",
@@ -338,28 +313,21 @@ class Stocks_Crawl(db.MySQL):
                 inplace=True,
             )
 
-            df = self.Rename_df_columns(df, Flag_tpex_stocks=False, Flag_tpex_insti_inv=True)
-
-            df = self.Get_specific_stock(df)
-
+            df = self.rename_stock_columns(df, Flag_tpex_stocks=False, Flag_tpex_insti_inv=True)
+            df = self.get_stock(df)
             self.df_institutional_investors = self.df_institutional_investors.append(
                 df, ignore_index=True
             )
 
-        ######### 爬上市公司 #########
-
+        # 爬上市公司
         if Flag_stocks:
             df = pd.read_csv(
                 StringIO(r.text.replace("=", "")),
                 header=["證券代號" in l for l in r.text.split("\n")].index(True) - 1,
             )
-
             df.insert(0, "Date", date)
-
             df = df.iloc[:, :12]
-
-            df = self.Get_specific_stock(df)
-
+            df = self.get_stock(df)
             self.df_stocks = self.df_stocks.append(df, ignore_index=True)
 
         if Flag_insti_inv:
@@ -368,18 +336,14 @@ class Stocks_Crawl(db.MySQL):
                 .dropna(how="all", axis=1)
                 .dropna(how="any")
             )
-
             df.insert(0, "Date", date)
-
-            df = self.Get_specific_stock(df)
-
+            df = self.get_stock(df)
             self.df_institutional_investors = self.df_institutional_investors.append(
                 df, ignore_index=True
             )
 
     # 合併Date
-    #############################################
-    def ConcatData(self):
+    def concat_stock_data(self):
         # 將index reset 以免concat出現NaN值
         self.df_stocks.reset_index(drop=True, inplace=True)
         self.df_institutional_investors.reset_index(drop=True, inplace=True)
@@ -394,9 +358,7 @@ class Stocks_Crawl(db.MySQL):
             axis=1,
         )
 
-    # 將Date存進資料庫
-    #############################################
-
+    # 將 Data存進資料庫
     def SaveIntoDatabase(self):
         # creating column list for insertion
         cols = "`,`".join([str(i) for i in self.df_stocks.columns.tolist()])
@@ -417,16 +379,10 @@ class Stocks_Crawl(db.MySQL):
                 print("This data already exists in this table, jumping...")
                 continue
 
-    # 抓取PB, PE
-    #############################################
-
+    # get the stocks' PB, PE
     def Crawl_PB_and_PE(self, date):
-        """
-        This function is for crwaling the PB, PE and Dividend yield statistics.
-        """
-
+        """This function is for crwaling the PB, PE and Dividend yield statistics."""
         # 上櫃公司
-
         if self.Flag_tpe_stocks:
             url = (
                 "https://www.tpex.org.tw/web/stock/aftertrading/peratio_analysis/pera_download.php?l=zh-tw&d="
@@ -435,26 +391,19 @@ class Stocks_Crawl(db.MySQL):
             )
 
             r = requests.get(url)
-
             r = r.text.split("\n")
 
             df = pd.read_csv(StringIO("\n".join(r[3:-1]))).fillna(0)
-
             columns_title = ["股票代號", "名稱", "本益比", "股價淨值比", "殖利率(%)", "股利年度"]
-
             df = df[columns_title]
-
             df.rename(
                 columns={"殖利率(%)": "殖利率", "股票代號": "證券代號", "名稱": "證券名稱"},
                 inplace=True,
             )
-
-            df = self.Get_specific_stock(df)
-
+            df = self.get_stock(df)
             self.df_statistics = self.df_statistics.append(df, ignore_index=True)
 
         # 上市公司
-
         if self.Flag_tsw_stocks:
             url = (
                 "https://www.twse.com.tw/exchangeReport/BWIBBU_d?response=csv&date="
@@ -463,7 +412,6 @@ class Stocks_Crawl(db.MySQL):
             )
 
             r = requests.get(url)
-
             r = r.text.split("\r\n")[:-13]
 
             df = (
@@ -471,7 +419,6 @@ class Stocks_Crawl(db.MySQL):
                 .dropna(how="all", axis=1)
                 .apply(lambda x: x.replace("-", 0))
             )
-
             columns_title = [
                 "證券代號",
                 "證券名稱",
@@ -480,11 +427,7 @@ class Stocks_Crawl(db.MySQL):
                 "殖利率(%)",
                 "股利年度",
             ]
-
             df = df[columns_title]
-
             df.rename(columns={"殖利率(%)": "殖利率"}, inplace=True)
-
-            df = self.Get_specific_stock(df)
-
+            df = self.get_stock(df)
             self.df_statistics = self.df_statistics.append(df, ignore_index=True)
