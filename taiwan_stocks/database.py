@@ -75,7 +75,7 @@ class MySQL:
         print("MySQL table created Successfully...")
 
     def check_if_table_exist(self):
-        # Drop table if it already exist, using execute() method.
+        # drop table if it already exist, using execute() method.
         check_table_sql = "SHOW TABLES"
 
         self.cursor.execute(check_table_sql)

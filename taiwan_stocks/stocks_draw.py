@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-import Stocks_Analasis as SA
+import stocks_analysis as SA
 from plotly.subplots import make_subplots
 
 
@@ -14,9 +14,6 @@ class Stocks_Draw(SA.Stocks_Analasis):
         self.MA60 = pd.Series(data=np.nan, index=["1"])
         self.row = 1
         self.fig = None
-
-    # DRAWING
-    #############################################
 
     def draw_plots(
         self,
@@ -34,14 +31,13 @@ class Stocks_Draw(SA.Stocks_Analasis):
         save_path="",
     ):
         Flags = [K_plot, Volumn_plot, D_IT, D_FI, D_DL]
+        title_candidates = ["K線圖", "成交量", "投信買超", "外資買超", "自營商買超"]
 
-        Subplot_titles = ["K線圖", "成交量", "投信買超", "外資買超", "自營商買超"]
-
-        subplot_titles = [j for i, j in zip(Flags, Subplot_titles, strict=False) if i is True]
-
+        subplot_titles = [
+            title for flag, title in zip(Flags, title_candidates, strict=False) if flag is True
+        ]
         subplot_nums = sum(Flags)
 
-        # 創造subplots, 並且設定相關參數
         self.fig = make_subplots(
             rows=subplot_nums,
             cols=1,
@@ -59,7 +55,7 @@ class Stocks_Draw(SA.Stocks_Analasis):
             ],
         )
 
-        # 把figure的整理大小調大，並把Candlestick的下半部分拿掉，整體圖畫起來比較順
+        # adjust the layout of the figure
         self.fig.update_layout(
             width=1650,
             height=3000,
@@ -73,10 +69,10 @@ class Stocks_Draw(SA.Stocks_Analasis):
             font={"family": "Arial", "size": 18},
         )
 
-        # 把supplots的title字體調大
+        # tune the font size of the titles
         self.fig.update_annotations(font_size=32)
 
-        # 創造K線圖
+        # create k plot figure
         figure_K_plot = go.Candlestick(
             x=self.df_stocks["Date"],
             open=self.df_stocks["開盤價"],
@@ -89,7 +85,7 @@ class Stocks_Draw(SA.Stocks_Analasis):
             showlegend=True,
         )
 
-        # 畫K線圖
+        # draw k plots
         self.fig.add_trace(figure_K_plot, self.row, 1, secondary_y=False)
         self.row += 1
 
@@ -104,22 +100,14 @@ class Stocks_Draw(SA.Stocks_Analasis):
             else:
                 Volumn_color.append("#4caf50")
 
-        # 創造成交量(Volume)
+        # create the volume plots figure
         figure_volume = go.Bar(
             x=self.df_stocks["Date"], y=Volumn, marker_color=Volumn_color, showlegend=False
         )
 
-        # 畫volume
+        # draw volume plots
         self.fig.add_trace(figure_volume, self.row, 1, secondary_y=False)
         self.row += 1
-
-        # Set y-axes titles
-        # Max_Volume = pd.to_numeric(self.df_stocks['成交股數'].apply(lambda x: x.replace(',',''))).max()
-        # Max_Stock_Price = self.df_stocks['最高價'].apply(lambda x:x.replace(",", "").replace("-","0")).astype(float).max()
-        # Min_Stock_Price = self.df_stocks['最低價'].apply(lambda x:x.replace(",", "").replace("-","0")).astype(float).min()
-
-        # self.fig.update_layout(yaxis=dict(title="<b>成交量</b>", range=[0, Max_Volume*7]) )
-        # self.fig.update_layout(yaxis2=dict(title="<b>股價</b>", range = [Min_Stock_Price//1.2, Max_Stock_Price*1.02]))
 
         if D_5MA:
             self.MA5 = self.draw_MA(day_interval=5, marker={"color": "#FF9224"})
@@ -141,7 +129,7 @@ class Stocks_Draw(SA.Stocks_Analasis):
             self.fig.write_image(save_path + fig_name + ".png", format="png")
             # self.fig.write_html(save_path + fig_name + ".html", include_plotlyjs="cdn")
 
-        self.fig.show()
+        # self.fig.show()
 
     def draw_MA(self, day_interval, marker):
         MA = self.df_stocks["收盤價"].rolling(day_interval).mean()
@@ -158,7 +146,7 @@ class Stocks_Draw(SA.Stocks_Analasis):
 
         return MA
 
-    def Draw_Bar(self, buying_number, marker, name=""):
+    def draw_bar(self, buying_number, marker, name=""):
         color = ["#e53935" if ii >= 0 else "#4caf50" for ii in buying_number]
         Bar = go.Bar(
             x=self.df_stocks["Date"].to_numpy(),
@@ -176,5 +164,4 @@ class Stocks_Draw(SA.Stocks_Analasis):
             showlegend=False,
         )
         self.fig.add_trace(Bar, self.row, 1, secondary_y=False)
-        # self.fig.add_trace(Line, self.row, 1, secondary_y = False)
         self.row += 1
