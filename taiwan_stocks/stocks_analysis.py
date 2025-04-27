@@ -1,100 +1,80 @@
 import numpy as np
 import pandas as pd
 
-import crawl as SC
 
+class Analyzer:
+    def __init__(self, df_stocks: pd.DataFrame) -> None:
+        self.inv_num = []
+        self.foreign_num = []
+        self.dealer_num = []
+        self.df_stocks = df_stocks
+        self._ma5 = self.df_stocks["收盤價"].rolling(5).mean()
+        self._ma10 = self.df_stocks["收盤價"].rolling(10).mean()
+        self._ma20 = self.df_stocks["收盤價"].rolling(20).mean()
+        self._ma60 = self.df_stocks["收盤價"].rolling(60).mean()
+        self.cal_investment_trust()
+        self.cal_foreign_investor()
+        self.cal_dealer()
 
-class Stocks_Analasis(SC.Stocks_Crawl):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    @property
+    def MA5(self) -> pd.Series:
+        return self._ma5
 
-        self.IT_num = []
-        self.FI_num = []
-        self.DL_num = []
+    @property
+    def MA10(self) -> pd.Series:
+        return self._ma10
 
-        self.Cal_Investment_Trust()
-        self.Cal_Foreign_Investor()
-        self.Cal_Dealer()
+    @property
+    def MA20(self) -> pd.Series:
+        return self._ma20
 
-        print("\n  {}".format("(5) Analyzing the stocks"))
-        print("----------------------------------------")
+    @property
+    def MA60(self) -> pd.Series:
+        return self._ma60
 
-    # CALCULATING
-    # 計算投信
-    def Cal_Investment_Trust(self):
-        # 把數字裡的逗點轉換掉
-        df = self.df_institutional_investors["投信買賣超股數"].apply(lambda x: x.replace(",", ""))
-        self.IT_num = pd.to_numeric(df).values
-        # 換成張數
-        self.IT_num = self.IT_num / 1000
-        # 取整數
-        self.IT_num = np.ceil(self.IT_num)
+    def cal_investment_trust(self) -> None:
+        df = self.df_stocks["投信買賣超股數"].apply(lambda x: x.replace(",", ""))
+        self.inv_num = pd.to_numeric(df).values
+        self.inv_num = self.inv_num / 1000
+        self.inv_num = np.ceil(self.inv_num)
 
-    # 計算外資
-    def Cal_Foreign_Investor(self):
-        # 把數字裡的逗點轉換掉
-        df = self.df_institutional_investors["外陸資買賣超股數(不含外資自營商)"].apply(
-            lambda x: x.replace(",", "")
-        )
-        self.FI_num = pd.to_numeric(df).values
-        # 換成張數
-        self.FI_num = self.FI_num / 1000
-        # 取整數
-        self.FI_num = np.ceil(self.FI_num)
+    def cal_foreign_investor(self) -> None:
+        df = self.df_stocks["外陸資買賣超股數(不含外資自營商)"].apply(lambda x: x.replace(",", ""))
+        self.foreign_num = pd.to_numeric(df).values
+        self.foreign_num = self.foreign_num / 1000
+        self.foreign_num = np.ceil(self.foreign_num)
 
-    # 計算自營商
-    def Cal_Dealer(self):
-        # 把數字裡的逗點轉換掉
-        df = self.df_institutional_investors["自營商買賣超股數"].apply(lambda x: x.replace(",", ""))
-        self.DL_num = pd.to_numeric(df).values
-        # 換成張數
-        self.DL_num = self.DL_num / 1000
-        # 取整數
-        self.DL_num = np.ceil(self.DL_num)
+    def cal_dealer(self) -> None:
+        df = self.df_stocks["自營商買賣超股數"].apply(lambda x: x.replace(",", ""))
+        self.dealer_num = pd.to_numeric(df).values
+        self.dealer_num = self.dealer_num / 1000
+        self.dealer_num = np.ceil(self.dealer_num)
 
-    # ALGORITHM
-    def Get_Close_Price(self, stock_day):
-        """
-        INPUT: 股票日期
-        OUTPUT: 股票當天的收盤價
-
-        """
+    def get_close_price(self, stock_day: str) -> None:
         return self.df_stocks[self.df_stocks.Date == stock_day]["收盤價"]
 
-    def Dependency(
-        self,
-        IT_flag=False,
-        IT_stocks_number=50,
-        FI_flag=False,
-        FI_stocks_number=100,
-        DL_flag=False,
-        DL_stocks_number=10,
-        date_interval=3,
-        value_date_interval=2,
-    ):
-        print("Dependency:")
+    def dependency(self) -> None:
+        print("dependency:")
         print("This feature is currently not available !!")
 
-    def Stand_Up_On_MAs(self):
-        print("\n{}".format("Stand_Up_On_MAs (針對你Fetch data區間的最後一天做分析):"))
-        # 抓出所需data
+    def stand_up_on_MAs(self) -> None:
+        print("\nStand_up_on_MAs (針對你Fetch data區間的最後一天做分析):")
         stock_price = self.df_stocks["收盤價"].astype(float).iloc[-1]
         MA5 = self.MA5.iloc[-1] if not self.MA5.isnull().values.all() else 0
         MA10 = self.MA10.iloc[-1] if not self.MA10.isnull().values.all() else 0
         MA20 = self.MA20.iloc[-1] if not self.MA20.isnull().values.all() else 0
         MA60 = self.MA60.iloc[-1] if not self.MA60.isnull().values.all() else 0
 
-        four_MAs = MA5 and MA10 and MA20 and MA60
         three_MAs = MA5 and MA10 and MA20
+        four_MAs = MA5 and MA10 and MA20 and MA60
 
-        four_flag = (
-            True if four_MAs and max(stock_price, MA5, MA10, MA20, MA60) == stock_price else False
-        )
         three_flag = (
             True if three_MAs and max(stock_price, MA5, MA10, MA20) == stock_price else False
         )
+        four_flag = (
+            True if four_MAs and max(stock_price, MA5, MA10, MA20, MA60) == stock_price else False
+        )
 
-        # 判斷data值
         if four_flag:
             print("股價已站上5日、10日、20日、60日均線均線，為四海遊龍型股票!!")
         elif three_flag:
@@ -106,9 +86,8 @@ class Stocks_Analasis(SC.Stocks_Crawl):
         else:
             print("目前股價尚未成三陽開泰型、四海遊龍型股票!!")
 
-    # UTILITIES
-    def save_csv(self, save_path, filename, stocks=False, institutional_investors=False):
+    def save_csv(self, save_path, filename, stocks=False, institutional_investors=False) -> None:
         if stocks:
             self.df_stocks.to_csv(save_path + filename)
         if institutional_investors:
-            self.df_institutional_investors.to_csv(save_path + filename)
+            self.df_stocks.to_csv(save_path + filename)
