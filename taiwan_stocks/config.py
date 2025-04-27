@@ -1,30 +1,24 @@
 import os
 
-import yaml
+from dotenv import load_dotenv
+from pydantic import BaseModel
+
+load_dotenv()
 
 
-class Config:
-    """
-    Loads configuration from YAML file or environment variables.
-    """
+class DBConfig(BaseModel):
+    host: str = os.getenv("DB_HOST", "localhost")
+    port: int = int(os.getenv("DB_PORT", "3306"))
+    user: str = os.getenv("DB_USER", "root")
+    password: str = os.getenv("DB_PASSWORD", "")
+    database: str = os.getenv("DB_NAME", "taiwan_stocks")
 
-    def __init__(self, path: str = None):
-        cfg = {}
-        if path and os.path.exists(path):
-            with open(path) as f:
-                cfg = yaml.safe_load(f)
+    @property
+    def parameters(self) -> dict:
+        return self.model_dump()
 
-        # database settings
-        self.db = {
-            "host": os.getenv("DB_HOST", cfg.get("db", {}).get("host", "localhost")),
-            "port": int(os.getenv("DB_PORT", cfg.get("db", {}).get("port", 3306))),
-            "user": os.getenv("DB_USER", cfg.get("db", {}).get("user", "root")),
-            "password": os.getenv("DB_PASS", cfg.get("db", {}).get("password", "")),
-            "db": os.getenv("DB_NAME", cfg.get("db", {}).get("db", "stocks")),
-            "charset": cfg.get("db", {}).get("charset", "utf8mb4"),
-        }
-
-        # crawler settings
-        self.symbols = cfg.get("symbols", ["2330", "2317"])
-        # seconds between requests
-        self.rate_limit = cfg.get("rate_limit", 1)
+    @property
+    def url(self):
+        return (
+            f"mysql+pymysql://{self.user}:{self.password}@{self.host}:{self.port}/{self.database}"
+        )
