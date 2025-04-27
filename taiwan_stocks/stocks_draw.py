@@ -1,24 +1,40 @@
+import os
+
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-import stocks_analysis as SA
 from plotly.subplots import make_subplots
 
 
-class Stocks_Draw(SA.Stocks_Analasis):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.MA5 = pd.Series(data=np.nan, index=["1"])
-        self.MA10 = pd.Series(data=np.nan, index=["1"])
-        self.MA20 = pd.Series(data=np.nan, index=["1"])
-        self.MA60 = pd.Series(data=np.nan, index=["1"])
+class Drawer:
+    def __init__(self, stock_name: str, stock_num: str, df_stocks: pd.DataFrame, **kwargs) -> None:
         self.row = 1
         self.fig = None
+        self.df_stocks = df_stocks
+        self.title = f"{stock_name}-{stock_num}"
+
+    def cal_investment_trust(self) -> None:
+        df = self.df_stocks["投信買賣超股數"].str.replace(",", "")
+        self.inv_num = pd.to_numeric(df).values
+        self.inv_num = self.inv_num / 1000
+        self.inv_num = np.ceil(self.inv_num)
+
+    def cal_foreign_investor(self) -> None:
+        df = self.df_stocks["外陸資買賣超股數(不含外資自營商)"].str.replace(",", "")
+        self.foreign_num = pd.to_numeric(df).values
+        self.foreign_num = self.foreign_num / 1000
+        self.foreign_num = np.ceil(self.foreign_num)
+
+    def cal_dealer(self) -> None:
+        df = self.df_stocks["自營商買賣超股數"].str.replace(",", "")
+        self.dealer_num = pd.to_numeric(df).values
+        self.dealer_num = self.dealer_num / 1000
+        self.dealer_num = np.ceil(self.dealer_num)
 
     def draw_plots(
         self,
         K_plot=True,
-        Volumn_plot=True,
+        volumn_plot=True,
         D_5MA=False,
         D_10MA=False,
         D_20MA=False,
@@ -27,16 +43,16 @@ class Stocks_Draw(SA.Stocks_Analasis):
         D_FI=False,
         D_DL=False,
         save_fig=False,
-        fig_name="",
+        file_name="",
         save_path="",
     ):
-        Flags = [K_plot, Volumn_plot, D_IT, D_FI, D_DL]
+        flags = [K_plot, volumn_plot, D_IT, D_FI, D_DL]
         title_candidates = ["K線圖", "成交量", "投信買超", "外資買超", "自營商買超"]
 
         subplot_titles = [
-            title for flag, title in zip(Flags, title_candidates, strict=False) if flag is True
+            title for flag, title in zip(flags, title_candidates, strict=False) if flag is True
         ]
-        subplot_nums = sum(Flags)
+        subplot_nums = sum(flags)
 
         self.fig = make_subplots(
             rows=subplot_nums,
@@ -56,17 +72,18 @@ class Stocks_Draw(SA.Stocks_Analasis):
         )
 
         # adjust the layout of the figure
+        font_family = "Noto Sans CJK TC"
         self.fig.update_layout(
             width=1650,
             height=3000,
             xaxis_rangeslider_visible=False,
             title={
-                "text": f"<b>{self.table_name}-{self.stock_num}</b>",
+                "text": self.title,
                 "x": 0.0387,
                 "y": 0.99,
-                "font": {"family": "Arial", "size": 36, "color": "#000000"},
+                "font": {"family": font_family, "size": 36, "color": "#000000"},
             },
-            font={"family": "Arial", "size": 18},
+            font={"family": font_family, "size": 18},
         )
 
         # tune the font size of the titles
@@ -89,20 +106,14 @@ class Stocks_Draw(SA.Stocks_Analasis):
         self.fig.add_trace(figure_K_plot, self.row, 1, secondary_y=False)
         self.row += 1
 
-        Volumn = pd.to_numeric(self.df_stocks["成交股數"].apply(lambda x: x.replace(",", "")))
-        Volumn = np.round(Volumn / 1000, decimals=0)
-        Volumn_color = ["#e53935"]
-
-        # Volumn_color = [ 'red' if Volumn[ii] >= Volumn[ii-1] else 'green' for ii in range(1, len(Volumn)) ]
-        for ii in range(1, len(Volumn)):
-            if Volumn[ii] >= Volumn[ii - 1]:
-                Volumn_color.append("#e53935")
-            else:
-                Volumn_color.append("#4caf50")
+        volumn = np.round(self.df_stocks["成交股數"] / 1000, decimals=0)
+        volumn_color = ["#e53935"] + [
+            "#e53935" if volumn[i] >= volumn[i - 1] else "#4caf50" for i in range(1, len(volumn))
+        ]
 
         # create the volume plots figure
         figure_volume = go.Bar(
-            x=self.df_stocks["Date"], y=Volumn, marker_color=Volumn_color, showlegend=False
+            x=self.df_stocks["Date"], y=volumn, marker_color=volumn_color, showlegend=False
         )
 
         # draw volume plots
@@ -110,28 +121,34 @@ class Stocks_Draw(SA.Stocks_Analasis):
         self.row += 1
 
         if D_5MA:
-            self.MA5 = self.draw_MA(day_interval=5, marker={"color": "#FF9224"})
+            self.draw_MA(day_interval=5, marker={"color": "#FF9224"})
         if D_10MA:
-            self.MA10 = self.draw_MA(day_interval=10, marker={"color": "#E800E8"})
+            self.draw_MA(day_interval=10, marker={"color": "#E800E8"})
         if D_20MA:
-            self.MA20 = self.draw_MA(day_interval=20, marker={"color": "#7373B9"})
+            self.draw_MA(day_interval=20, marker={"color": "#7373B9"})
         if D_60MA:
-            self.MA60 = self.draw_MA(day_interval=60, marker={"color": "#00CACA"})
+            self.draw_MA(day_interval=60, marker={"color": "#00CACA"})
+        print("Finish drawing the MA lines.")
 
         if D_IT:
-            self.Draw_Bar(buying_number=self.IT_num, marker={"color": "#FF9224"}, name="投信")
+            self.cal_investment_trust()
+            self.draw_bar(buying_number=self.inv_num, marker={"color": "#FF9224"}, name="投信")
         if D_FI:
-            self.Draw_Bar(buying_number=self.FI_num, marker={"color": "#E800E8"}, name="外資")
+            self.cal_foreign_investor()
+            self.draw_bar(buying_number=self.foreign_num, marker={"color": "#E800E8"}, name="外資")
         if D_DL:
-            self.Draw_Bar(buying_number=self.DL_num, marker={"color": "#7373B9"}, name="自營商")
+            self.cal_dealer()
+            self.draw_bar(buying_number=self.dealer_num, marker={"color": "#7373B9"}, name="自營商")
+        print("Finish drawing the bars.")
 
-        if save_fig and fig_name != "" and save_path != "":
-            self.fig.write_image(save_path + fig_name + ".png", format="png")
-            # self.fig.write_html(save_path + fig_name + ".html", include_plotlyjs="cdn")
+        if save_fig and file_name != "" and save_path != "":
+            filepath_base = os.path.join(save_path, file_name)
+            self.fig.write_image(f"{filepath_base}.png", format="png")
+            self.fig.write_html(f"{filepath_base}.html", include_plotlyjs="cdn")
 
         # self.fig.show()
 
-    def draw_MA(self, day_interval, marker):
+    def draw_MA(self, day_interval: int, marker: dict) -> float:
         MA = self.df_stocks["收盤價"].rolling(day_interval).mean()
 
         figure_MA = go.Scatter(
@@ -144,10 +161,11 @@ class Stocks_Draw(SA.Stocks_Analasis):
         )
         self.fig.add_trace(figure_MA, 1, 1, secondary_y=True)
 
-        return MA
-
-    def draw_bar(self, buying_number, marker, name=""):
-        color = ["#e53935" if ii >= 0 else "#4caf50" for ii in buying_number]
+    def draw_bar(self, buying_number: np.ndarray, marker: str, name: str = "") -> None:
+        color = ["#e53935"] + [
+            "#e53935" if buying_number[i] >= buying_number[i - 1] else "#4caf50"
+            for i in range(1, len(buying_number))
+        ]
         Bar = go.Bar(
             x=self.df_stocks["Date"].to_numpy(),
             y=buying_number,
