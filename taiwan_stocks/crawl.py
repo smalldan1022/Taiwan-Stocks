@@ -1,287 +1,306 @@
 import time
+from abc import ABC, abstractmethod
 from io import StringIO
 
-import database as db
 import pandas as pd
 import requests
 
+from taiwan_stocks.stock_info import (
+    NUMERICAL_COLUMNS,
+    OTC_INSTI_INV_RENAME_COLUMNS,
+    OTC_INSTITUTIONAL_INVESTORS_URL,
+    OTC_PB_PE_URL,
+    OTC_STOCKS_RENAME_COLUMNS,
+    OTC_URL,
+    TSE_INSTITUTIONAL_INVESTORS_URL,
+    TSE_PB_PE_URL,
+    TSE_URL,
+)
 
-class Stocks_Crawl(db.MySQL):
-    def __init__(
-        self,
-        timesleep=5,
-        Crawl_flag=True,
-        MySQL_flag=True,
-        Fetch_stock_statistics_flag=True,
-        **kwargs,
-    ):
-        super().__init__(**kwargs)
-        self.Crawl_flag = Crawl_flag
-        self.MySQL_flag = MySQL_flag
-        self.Fetch_stock_statistics_flag = Fetch_stock_statistics_flag
 
-        # 上櫃公司價格資料
-        self.url_tpex_stock = "https://www.tpex.org.tw/web/stock/aftertrading/daily_close_quotes/stk_quote_download.php?l=zh-tw&d="
+class Builder(ABC):
+    def __init__(self, *args, **kwargs):
+        super().__init__()
+        self.df_all_stocks_info = pd.DataFrame()
+        self.df_stocks = pd.DataFrame()
+        self.df_institutional_investors = pd.DataFrame()
+        self.df_statistics = pd.DataFrame()
+        self.numerical_columns = NUMERICAL_COLUMNS
 
-        # 上櫃公司法人買賣資料
-        self.url_tpex_df_institutional_investors = "https://www.tpex.org.tw/web/stock/3insti/daily_trade/3itrade_hedge_result.php?l=zh-tw&o=csv&se=EW&t=D&d="
+    @property
+    @abstractmethod
+    def product(self) -> None:
+        pass
 
-        # 上市公司價格資料
-        self.url_stock = "https://www.twse.com.tw/exchangeReport/MI_INDEX?response=csv&date="
-        self.df_stocks = pd.DataFrame(
-            data=[],
-            columns=[
-                "Date",
-                "證券代號",
-                "證券名稱",
-                "成交股數",
-                "成交筆數",
-                "成交金額",
-                "開盤價",
-                "最高價",
-                "最低價",
-                "收盤價",
-                "漲跌(+/-)",
-                "漲跌價差",
-            ],
-        )
+    @abstractmethod
+    def produce_minimal_viable_crawl(self) -> None:
+        pass
 
-        # 上市公司法人買賣資料
-        self.url_institutional_investors = "https://www.twse.com.tw/fund/TWT47U?response=csv&date="
-        self.df_institutional_investors = pd.DataFrame(
-            data=[],
-            columns=[
-                "Date",
-                "證券代號",
-                "證券名稱",
-                "外陸資買進股數(不含外資自營商)",
-                "外陸資賣出股數(不含外資自營商)",
-                "外陸資買賣超股數(不含外資自營商)",
-                "外資自營商買進股數",
-                "外資自營商賣出股數",
-                "外資自營商買賣超股數",
-                "投信買進股數",
-                "投信賣出股數",
-                "投信買賣超股數",
-                "自營商買賣超股數",
-                "自營商買進股數(自行買賣)",
-                "自營商賣出股數(自行買賣)",
-                "自營商買賣超股數(自行買賣)",
-                "自營商買進股數(避險)",
-                "自營商賣出股數(避險)",
-                "自營商買賣超股數(避險)",
-                "三大法人買賣超股數",
-            ],
-        )
+    @abstractmethod
+    def produce_full_featured_crawl(self) -> None:
+        pass
 
-        # 上市櫃公司股票本益比, 股價淨值比, 殖利率, 股利年度
-        self.df_statistics = pd.DataFrame(
-            data=[], columns=["證券代號", "證券名稱", "本益比", "股價淨值比", "殖利率", "股利年度"]
-        )
+    @abstractmethod
+    def crawl_PB_PE(self) -> None:
+        pass
 
-        self.timesleep = timesleep
-        if self.Crawl_flag:
-            self.Crawl()
-        elif self.Fetch_stock_statistics_flag:
-            self.Fetch_stock_statistics()
-        else:
-            print("The program is useless...END")
 
-        # save the data into database or not
-        if self.MySQL_flag:
-            self.save_into_database()
-            self.close_db()
+class TPECrawler(Builder):
+    def __init__(self, stock_name: str, stock_num: str, dates: list):
+        super().__init__()
+        self.tse_url = TSE_URL
+        self.tse_insti_inv_url = TSE_INSTITUTIONAL_INVESTORS_URL
+        self.tse_PB_PE_url = TSE_PB_PE_URL
 
-    # change the date
-    def date_changer(self, date):
-        year = date[:4]
-        year = str(int(year) - 1911)
-        month = date[4:6]
-        day = date[6:]
+        self.stock_name = stock_name
+        self.stock_num = stock_num
 
-        return year + "/" + month + "/" + day
+        self.dates = dates
+        self.timesleep = 1
 
-    def Crawl(self):
-        # start crawling data
+        self.reset()
+
+    def reset(self) -> None:
+        self._product = StockProduct()
+
+    @property
+    def product(self) -> "StockProduct":
+        product = self._product
+        self.reset()
+        return product
+
+    def produce_minimal_viable_crawl(self) -> None:
         for date in self.dates:
             print(date + " starts crawling")
             try:
-                # 爬上櫃公司
-                if self.Flag_tpe_stocks:
-                    ROC_era_date = self.date_changer(date)
-                    # stock price information
-                    self.Crawl_method(
-                        url=self.url_tpex_stock,
-                        date=ROC_era_date,
-                        Date=date,
-                        url_suffix="&s=0,asc,0",
-                        Flag_tpex_stocks=True,
-                        Flag_tpex_insti_inv=False,
-                        Flag_stocks=False,
-                        Flag_insti_inv=False,
-                    )
-                    # 三大法人資訊
-                    self.Crawl_method(
-                        url=self.url_tpex_df_institutional_investors,
-                        date=ROC_era_date,
-                        Date=date,
-                        url_suffix="&s=0,asc",
-                        Flag_tpex_stocks=False,
-                        Flag_tpex_insti_inv=True,
-                        Flag_stocks=False,
-                        Flag_insti_inv=False,
-                    )
-                    # 本益比, 股價淨值比, 殖利率(%), 股利年度
-                    self.crawl_PB_PE(ROC_era_date)
-
-                # 爬上市公司
-                if self.Flag_tsw_stocks:
-                    # 股價資訊
-                    self.Crawl_method(
-                        url=self.url_stock,
-                        date=date,
-                        Date=date,
-                        url_suffix="&type=ALLBUT0999",
-                        Flag_tpex_stocks=False,
-                        Flag_tpex_insti_inv=False,
-                        Flag_stocks=True,
-                        Flag_insti_inv=False,
-                    )
-                    # 爬上市公司三大法人資訊
-                    self.Crawl_method(
-                        url=self.url_institutional_investors,
-                        date=date,
-                        Date=date,
-                        url_suffix="&selectType=ALLBUT0999",
-                        Flag_tpex_stocks=False,
-                        Flag_tpex_insti_inv=False,
-                        Flag_stocks=False,
-                        Flag_insti_inv=True,
-                    )
-                    # 本益比, 股價淨值比, 殖利率(%), 股利年度
-                    self.crawl_PB_PE(date)
+                self.crawl_stocks_info(date=date)
 
             except Exception as err:
                 if type(err) == ValueError:
-                    # print(err)
                     print(date + " is holiday")
                 elif type(err) == KeyError:
-                    # print(err)
                     print(date + " is holiday")
                 else:
-                    print("Error happens!! -> " + str(err))
-                    break
+                    raise Exception("Error happens!! -> " + str(err))  # noqa: B904
             time.sleep(self.timesleep)
 
-        # 把所有資料concatenate起來
-        self.concat_stock_data()
+        self._product.data = self.df_stocks
 
-    # 抓取特定股票(使用者要抓的那支股票)
-    def get_stock(self, df):
-        if self.stock_name != "":
-            df = df[df["證券名稱"].apply(lambda x: x.replace(" ", "")) == self.stock_name]
+    def produce_full_featured_crawl(self) -> None:
+        for date in self.dates:
+            print(date + " starts crawling")
+            try:
+                self.crawl_stocks_info(date=date)
+                self.crawl_insti_inv(date=date)
+                self.crawl_PB_PE(date=date)
 
-        elif self.stock_num != "":
-            df["證券代號"] = df["證券代號"].apply(
-                lambda x: x.replace("=", "").replace('"', "").replace(" ", "")
+            except Exception as err:
+                if type(err) == ValueError:
+                    print(date + " is holiday")
+                elif type(err) == KeyError:
+                    print(date + " is holiday")
+                else:
+                    raise Exception("Error happens!! -> " + str(err))  # noqa: B904
+
+            time.sleep(self.timesleep)
+        self.transform_stock_data()
+        self._product.data = self.df_all_stocks_info
+
+    def get_stock(self, df: pd.DataFrame) -> pd.DataFrame:
+        if self.stock_name:
+            return df[df["證券名稱"].str.replace(" ", "") == self.stock_name]
+        if self.stock_num:
+            return df[
+                df["證券代號"].str.replace("=", "").str.replace('"', "").str.replace(" ", "")
+                == self.stock_num
+            ]
+        return df
+
+    def assign_column_first(self, df: pd.DataFrame, col_name: str, value: str) -> pd.DataFrame:
+        return df.assign(**{col_name: value}).loc[
+            :, [col_name] + [col for col in df.columns if col != col_name]
+        ]
+
+    def crawl_stocks_info(self, date: str) -> None:
+        response = requests.post(self.tse_url % date)
+        df = (
+            pd.read_csv(
+                StringIO(response.text.replace("=", "")),
+                header=["證券代號" in line for line in response.text.split("\n")].index(True) - 1,
             )
-            df = df[df["證券代號"] == self.stock_num]
+            .dropna(subset=["證券名稱"], axis=0, how="any")
+            .pipe(self.assign_column_first, col_name="Date", value=date)
+            .iloc[:, :12]
+        )
+        df = self.get_stock(df)
+        self.df_stocks = (
+            pd.concat([self.df_stocks, df], ignore_index=True) if not self.df_stocks.empty else df
+        )
 
-        return df
+    def crawl_insti_inv(self, date: str) -> None:
+        response = requests.post(self.tse_insti_inv_url % date)
+        df = (
+            pd.read_csv(StringIO(response.text.replace("=", "")), header=1)
+            .dropna(how="all", axis=1)
+            .dropna(how="any")
+            .pipe(self.get_stock)
+            .pipe(self.assign_column_first, col_name="Date", value=date)
+        )
+        self.df_institutional_investors = (
+            pd.concat([self.df_institutional_investors, df], ignore_index=True)
+            if not self.df_institutional_investors.empty
+            else df
+        )
 
-    # 重新命名col name, 確保一致
-    def rename_stock_columns(self, df, Flag_tpex_stocks=False, Flag_tpex_insti_inv=False):
-        tpex_stocks_rename_columns = {
-            "代號": "證券代號",
-            "名稱": "證券名稱",
-            "收盤 ": "收盤價",
-            "漲跌": "漲跌價差",
-            "開盤 ": "開盤價",
-            "最高 ": "最高價",
-            "最低": "最低價",
-            "成交股數  ": "成交股數",
-            "成交金額(元)": "成交金額",
-            "成交筆數 ": "成交筆數",
-        }
+    def crawl_PB_PE(self, date: str) -> None:
+        response = requests.get(self.tse_PB_PE_url % date)
+        response = response.text.split("\r\n")[:-13]
 
-        tpex_insti_inv_rename_columns = {
-            "代號": "證券代號",
-            "名稱": "證券名稱",
-            "外資及陸資(不含外資自營商)-買進股數": "外陸資買進股數(不含外資自營商)",
-            "外資及陸資(不含外資自營商)-賣出股數": "外陸資賣出股數(不含外資自營商)",
-            "外資及陸資(不含外資自營商)-買賣超股數": "外陸資買賣超股數(不含外資自營商)",
-            "外資自營商-買進股數": "外資自營商買進股數",
-            "外資自營商-賣出股數": "外資自營商賣出股數",
-            "外資自營商-買賣超股數": "外資自營商買賣超股數",
-            "投信-買進股數": "投信買進股數",
-            "投信-賣出股數": "投信賣出股數",
-            "投信-買賣超股數": "投信買賣超股數",
-            "自營商(自行買賣)-買進股數": "自營商買進股數(自行買賣)",
-            "自營商(自行買賣)-賣出股數": "自營商賣出股數(自行買賣)",
-            "自營商(自行買賣)-買賣超股數": "自營商買賣超股數(自行買賣)",
-            "自營商(避險)-買進股數": "自營商買進股數(避險)",
-            "自營商(避險)-賣出股數": "自營商賣出股數(避險)",
-            "自營商(避險)-買賣超股數": "自營商買賣超股數(避險)",
-            "自營商-買賣超股數": "自營商買賣超股數",
-            "三大法人買賣超股數合計": "三大法人買賣超股數",
-        }
+        df = (
+            pd.read_csv(StringIO("\n".join(response)), header=1)
+            .dropna(how="all", axis=1)
+            .pipe(self.get_stock)
+        )
+        self.df_statistics = (
+            pd.concat([self.df_statistics, df], ignore_index=True)
+            if not self.df_statistics.empty
+            else df
+        )
 
-        if Flag_tpex_stocks:
-            df.rename(columns=tpex_stocks_rename_columns, inplace=True)
-        elif Flag_tpex_insti_inv:
-            df.rename(columns=tpex_insti_inv_rename_columns, inplace=True)
-        else:
-            print("Error!!")
-
-        return df
-
-    # 開始爬蟲
-    def Crawl_method(
-        self,
-        url,
-        date,
-        Date,
-        url_suffix="",
-        Flag_tpex_stocks=False,
-        Flag_tpex_insti_inv=False,
-        Flag_stocks=False,
-        Flag_insti_inv=False,
-    ):
-        # 下載股價
-        r = requests.post(url + date + url_suffix)
-
-        # 整理資料, 變成表格
+    def transform_stock_data(self) -> None:
+        self.df_stocks.reset_index(drop=True, inplace=True)
+        self.df_institutional_investors.reset_index(drop=True, inplace=True)
+        self.df_statistics.reset_index(drop=True, inplace=True)
         if (
-            not Flag_tpex_stocks
-            and not Flag_tpex_insti_inv
-            and not Flag_stocks
-            and not Flag_insti_inv
+            self.df_stocks.empty
+            and self.df_institutional_investors.empty
+            and self.df_statistics.empty
         ):
-            raise AttributeError("Error...Crawling nothing, please set the flags right")  # noqa: E999
+            return
 
-        # 爬上櫃公司
-
-        if Flag_tpex_stocks:
-            df = pd.read_csv(StringIO(r.text), header=2).dropna(how="all", axis=1).dropna(how="any")
-            df = df.iloc[:, :11]
-            df = self.rename_stock_columns(df, Flag_tpex_stocks=True, Flag_tpex_insti_inv=False)
-            df = self.get_stock(df)
-            df.insert(0, "Date", Date)
-            df.drop("均價 ", axis="columns", inplace=True)
-            df["漲跌(+/-)"] = (
-                df["漲跌價差"].values[0][0] if df["漲跌價差"].values[0][0] != "0" else "X"
-            )
-            self.df_stocks = pd.concat([self.df_stocks, df], ignore_index=True)
-
-        if Flag_tpex_insti_inv:
-            df = (
-                pd.read_csv(StringIO(r.text.replace("=", "")), header=1)
-                .dropna(how="all", axis=1)
-                .dropna(how="any")
+        self.df_all_stocks_info = pd.concat(
+            [
+                self.df_stocks,
+                self.df_institutional_investors.drop(columns=["Date", "證券代號", "證券名稱"]),
+                self.df_statistics.drop(columns=["證券代號", "證券名稱", "收盤價"]),
+            ],
+            axis=1,
+        )
+        for num_col in self.numerical_columns:
+            self.df_all_stocks_info[num_col] = pd.to_numeric(
+                self.df_all_stocks_info[num_col].str.replace(",", "")
             )
 
-            df.insert(0, "Date", Date)
-            df.drop(
+
+class OTCCrawler(Builder):
+    def __init__(self, stock_name: str, stock_num: str, dates: list):
+        super().__init__()
+        self.otc_url = OTC_URL
+        self.otc_insti_inv_url = OTC_INSTITUTIONAL_INVESTORS_URL
+        self.otc_PB_PE_url = OTC_PB_PE_URL
+
+        self.otc_insti_inv_rename_cols = OTC_INSTI_INV_RENAME_COLUMNS
+        self.otc_stocks_rename_cols = OTC_STOCKS_RENAME_COLUMNS
+
+        self.stock_name = stock_name
+        self.stock_num = stock_num
+
+        self.dates = dates
+        self.timesleep = 1
+
+        self.reset()
+
+    def reset(self) -> None:
+        self._product = StockProduct()
+
+    @property
+    def product(self) -> "StockProduct":
+        product = self._product
+        self.reset()
+        return product
+
+    def produce_minimal_viable_crawl(self) -> None:
+        for date in self.dates:
+            print(date + " starts crawling")
+            date = self.date_convert(date)
+            try:
+                self.crawl_stocks_info(date=date)
+
+            except Exception as err:
+                if type(err) == ValueError:
+                    print(date + " is holiday")
+                elif type(err) == KeyError:
+                    print(date + " is holiday")
+                else:
+                    raise Exception("Error happens!! -> " + str(err))  # noqa: B904
+            time.sleep(self.timesleep)
+
+        self._product.data = self.df_stocks
+
+    def produce_full_featured_crawl(self) -> None:
+        for date in self.dates:
+            print(date + " starts crawling")
+            date = self.date_convert(date)
+            try:
+                self.crawl_stocks_info(date=date)
+                self.crawl_insti_inv(date=date)
+                self.crawl_PB_PE(date=date)
+
+            except Exception as err:
+                if type(err) == ValueError:
+                    print(date.replace("/", "") + " is holiday")
+                elif type(err) == KeyError:
+                    print(date.replace("/", "") + " is holiday")
+                else:
+                    raise Exception("Error happens!! -> " + str(err))  # noqa: B904
+
+            time.sleep(self.timesleep)
+        self.transform_stock_data()
+        self._product.data = self.df_all_stocks_info
+
+    def get_stock(self, df: pd.DataFrame) -> pd.DataFrame:
+        if self.stock_name:
+            return df[df["證券名稱"].str.replace(" ", "") == self.stock_name]
+
+        if self.stock_num:
+            return df[
+                df["證券代號"].str.replace("=", "").str.replace('"', "").str.replace(" ", "")
+                == self.stock_num
+            ]
+
+        return df
+
+    def assign_column_first(self, df: pd.DataFrame, col_name: str, value: str) -> pd.DataFrame:
+        return df.assign(**{col_name: value}).loc[
+            :, [col_name] + [col for col in df.columns if col != col_name]
+        ]
+
+    def crawl_stocks_info(self, date: str) -> None:
+        response = requests.post(self.otc_url % date)
+        df = (
+            pd.read_csv(StringIO(response.text), header=3, encoding="big5")
+            .dropna(how="all", axis=1)
+            .dropna(how="any")
+            .pipe(self.assign_column_first, col_name="Date", value=date)
+            .pipe(self.rename_stock_columns, rename_cols=self.otc_stocks_rename_cols)
+            .pipe(self.get_stock)
+            .iloc[:, :11]
+        )
+        df["漲跌(+/-)"] = df["漲跌價差"].values[0][0] if df["漲跌價差"].values[0][0] != "0" else "X"
+        self.df_stocks = (
+            pd.concat([self.df_stocks, df], ignore_index=True) if not self.df_stocks.empty else df
+        )
+
+    def crawl_insti_inv(self, date: str) -> None:
+        response = requests.post(self.otc_insti_inv_url % date)
+        df = (
+            pd.read_csv(StringIO(response.text), header=1)
+            .dropna(how="all", axis=1)
+            .dropna(how="any")
+            .pipe(self.assign_column_first, col_name="Date", value=date)
+            .pipe(self.rename_stock_columns, rename_cols=self.otc_insti_inv_rename_cols)
+            .pipe(self.get_stock)
+            .drop(
                 columns=[
                     "自營商-買進股數",
                     "自營商-賣出股數",
@@ -289,46 +308,45 @@ class Stocks_Crawl(db.MySQL):
                     "外資及陸資-賣出股數",
                     "外資及陸資-買賣超股數",
                 ],
-                inplace=True,
             )
+        )
+        self.df_institutional_investors = (
+            pd.concat([self.df_institutional_investors, df], ignore_index=True)
+            if not self.df_institutional_investors.empty
+            else df
+        )
 
-            df = self.rename_stock_columns(df, Flag_tpex_stocks=False, Flag_tpex_insti_inv=True)
-            df = self.get_stock(df)
-            self.df_institutional_investors = pd.concat(
-                [self.df_institutional_investors, df], ignore_index=True
-            )
+    def crawl_PB_PE(self, date: str) -> None:
+        # mingua
+        mingua_date = f"{int(date[:4])-1911}/{date[5:7]}/{date[8:]}"
+        response = requests.post(self.otc_PB_PE_url % (date, self.stock_num))
+        filtered_text = "\n".join(response.text.splitlines()[:-12])
+        df = (
+            pd.read_csv(StringIO(filtered_text), header=4)
+            .fillna(0)
+            .loc[lambda df: df["日期"] == mingua_date]
+            .pipe(self.assign_column_first, col_name="證券名稱", value=self.stock_name)
+            .pipe(self.assign_column_first, col_name="證券代號", value=self.stock_num)
+            .drop(columns=["日期"])
+        )
+        self.df_statistics = (
+            pd.concat([self.df_statistics, df], ignore_index=True)
+            if not self.df_statistics.empty
+            else df
+        )
 
-        # 爬上市公司
-        if Flag_stocks:
-            df = pd.read_csv(
-                StringIO(r.text.replace("=", "")),
-                header=["證券代號" in l for l in r.text.split("\n")].index(True) - 1,
-            )
-            df.insert(0, "Date", date)
-            df = df.iloc[:, :12]
-            df = self.get_stock(df)
-            self.df_stocks = pd.concat([self.df_stocks, df], ignore_index=True)
-
-        if Flag_insti_inv:
-            df = (
-                pd.read_csv(StringIO(r.text.replace("=", "")), header=1)
-                .dropna(how="all", axis=1)
-                .dropna(how="any")
-            )
-            df.insert(0, "Date", date)
-            df = self.get_stock(df)
-            self.df_institutional_investors = pd.concat(
-                [self.df_institutional_investors, df], ignore_index=True
-            )
-
-    # 合併Date
-    def concat_stock_data(self):
-        # 將index reset 以免concat出現NaN值
+    def transform_stock_data(self) -> None:
         self.df_stocks.reset_index(drop=True, inplace=True)
         self.df_institutional_investors.reset_index(drop=True, inplace=True)
         self.df_statistics.reset_index(drop=True, inplace=True)
+        if (
+            self.df_stocks.empty
+            and self.df_institutional_investors.empty
+            and self.df_statistics.empty
+        ):
+            return
 
-        self.df_stocks = pd.concat(
+        self.df_all_stocks_info = pd.concat(
             [
                 self.df_stocks,
                 self.df_institutional_investors.drop(columns=["Date", "證券代號", "證券名稱"]),
@@ -336,76 +354,47 @@ class Stocks_Crawl(db.MySQL):
             ],
             axis=1,
         )
-
-    def save_into_database(self):
-        # creating column list for insertion
-        cols = "`,`".join([str(i) for i in self.df_stocks.columns.tolist()])
-        # insert DataFrame recrds one by one.
-        for _i, row in self.df_stocks.iterrows():
-            try:
-                sql = (
-                    f"INSERT INTO `{self.table_name}` (`"
-                    + cols
-                    + "`) VALUES ("
-                    + "%s," * (len(row) - 1)
-                    + "%s)"
-                )
-                self.cursor.execute(sql, tuple(row))
-                # the connection is not autocommitted by default, so we must commit to save our changes
-                self.db.commit()
-            except Exception:
-                print("This data already exists in this table, jumping...")
-                continue
-
-    # get the stocks' PB, PE
-    def crawl_PB_PE(self, date):
-        """This function is for crwaling the PB, PE and Dividend yield statistics."""
-        # 上櫃公司
-        if self.Flag_tpe_stocks:
-            url = (
-                "https://www.tpex.org.tw/web/stock/aftertrading/peratio_analysis/pera_download.php?l=zh-tw&d="
-                + date
-                + "&s=0,asc,0"
+        for num_col in self.numerical_columns:
+            self.df_all_stocks_info[num_col] = pd.to_numeric(
+                self.df_all_stocks_info[num_col].str.replace(",", "")
             )
 
-            r = requests.get(url)
-            r = r.text.split("\n")
+    def rename_stock_columns(self, df: pd.DataFrame, rename_cols: dict) -> pd.DataFrame:
+        return df.rename(columns=rename_cols)
 
-            df = pd.read_csv(StringIO("\n".join(r[3:-1]))).fillna(0)
-            columns_title = ["股票代號", "名稱", "本益比", "股價淨值比", "殖利率(%)", "股利年度"]
-            df = df[columns_title]
-            df.rename(
-                columns={"殖利率(%)": "殖利率", "股票代號": "證券代號", "名稱": "證券名稱"},
-                inplace=True,
-            )
-            df = self.get_stock(df)
-            self.df_statistics = pd.concat([self.df_statistics, df], ignore_index=True)
+    def date_convert(self, date: str) -> str:
+        return f"{date[:4]}/{date[4:6]}/{date[6:]}"
 
-        # 上市公司
-        if self.Flag_tsw_stocks:
-            url = (
-                "https://www.twse.com.tw/exchangeReport/BWIBBU_d?response=csv&date="
-                + date
-                + "&selectType=ALL"
-            )
 
-            r = requests.get(url)
-            r = r.text.split("\r\n")[:-13]
+class StockProduct:
+    def __init__(self) -> None:
+        self.tradesketcher = None
+        self.analyzer = None
+        self._df = None
 
-            df = (
-                pd.read_csv(StringIO("\n".join(r)), header=1)
-                .dropna(how="all", axis=1)
-                .apply(lambda x: x.replace("-", 0))
-            )
-            columns_title = [
-                "證券代號",
-                "證券名稱",
-                "本益比",
-                "股價淨值比",
-                "殖利率(%)",
-                "股利年度",
-            ]
-            df = df[columns_title]
-            df.rename(columns={"殖利率(%)": "殖利率"}, inplace=True)
-            df = self.get_stock(df)
-            self.df_statistics = pd.concat([self.df_statistics, df], ignore_index=True)
+    @property
+    def data(self) -> None:
+        return self._df
+
+    @data.setter
+    def data(self, data: pd.DataFrame) -> None:
+        self._df = data
+
+
+class CrawlerDirector:
+    def __init__(self):
+        self._builder = None
+
+    @property
+    def builder(self) -> Builder:
+        return self._builder
+
+    @builder.setter
+    def builder(self, builder: Builder) -> None:
+        self._builder = builder
+
+    def build_minimal_viable_product(self) -> None:
+        self.builder.produce_minimal_viable_crawl()
+
+    def build_full_featured_product(self) -> None:
+        self.builder.produce_full_featured_crawl()
