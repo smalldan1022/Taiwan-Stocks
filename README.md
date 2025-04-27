@@ -6,9 +6,7 @@
 
 ### 這邊有實際的[圖表 Demo](https://nbviewer.jupyter.org/github/smalldan1022/Taiwan-Stocks/blob/main/pictures/index.html) !!
 
-##### _Hint 1 : 證交所有 request limit, 目前測試 5 秒爬一次比較安全，時間間隔太短的話會被 ban 掉，如果有好的方法可以躲的話也歡迎提供 !!_
-
-##### _Hint 2 : 櫃買中心在爬資料的時候會比證交所的還要慢，目前還不確定是甚麼原因，如果有人知道的話歡迎來信跟我討論 !!_
+##### _Hint 1 : 證交所有 request limit, 目前測試 1 秒爬一次比較安全，時間間隔太短的話會被 ban 掉，如果有好的方法可以躲的話也歡迎提供 !!_
 
 &emsp;
 
@@ -21,14 +19,6 @@
 - [台灣證券交易所](https://www.twse.com.tw/zh/)
 - [證券櫃檯買賣中心](https://www.tpex.org.tw/web/index.php?l=zh-tw)
 
-## Requirements
-
-- pandas -> 1.0.5
-- plotly -> 4.14.3
-- pymysql -> 0.10.1
-- python -> 3.7.7
-- python-dateutil -> 2.8.1
-- requests -> 2.24.0
 
 ## MySQL 安裝
 
@@ -40,124 +30,141 @@
 
 ## Quick Start
 
-### _皆使用 Stocks.py_
+__In run.py__
 
 ```python
-stocks = TS.Taiwan_Stocks( db_settings = db_settings, Crawl_flag = True, MySQL_flag = True,
-                           Fetch_stock_statistics_flag = True, timesleep = 5)
+import taiwan_stocks.taiwan_stocks as TS
 
-參數解釋:
+# cawl stock data, save data into MySQL, fetch data from MySQL
+ts = TS.TaiwanStocks(is_save=True, is_draw=True, is_analyze=True, save_path="YOUR/FILE/PATH")
+ts.run()
+stock_info = ts.get_info()
 
-- db_settings                 -> 設置你自己的database參數
-- Crawl_flag                  -> 是否爬資料
-- MySQL_flag                  -> 是否存進 MySQL database
-- Fetch_stock_statistics_flag -> 是否直接拿取 Database資料作分析
-- timesleep                   ->  爬蟲的時間間隔
+```
+
+__In command line__
+
+```bash
+# in your terminal
+# 1. install the taiwan-stock package first
+poetry install
+# 2. use it on bash
+taiwan-stocks --stock-num 2330 --start-date 20240101 --end-date 20240110 --save --draw --save-path YOUR/PATH/HERE
 
 ```
 
 ### 1. 如果要存到 MySQL database
 
+_在 run.py 修改 is_save 參數_
 ```python
-db_settings = { "host": "127.0.0.1",
-                "port": 3306,
-                "user": "root",
-                "password": "YOUR-PASSWORD-HERE!!",        <- 輸入你的資料庫密碼
-                "db": "YOUR-DATABASE-SCHEMA-NAME-HERE!!",  <- 輸入你創建的資料庫名字
-                "charset": "utf8" }
+import taiwan_stocks.taiwan_stocks as TS
 
-stocks = TS.Taiwan_Stocks( db_settings = db_settings, Crawl_flag = True, MySQL_flag = True,
-                           Fetch_stock_statistics_flag = True, timesleep = 5)
+# cawl stock data, save data into MySQL, fetch data from MySQL
+ts = TS.TaiwanStocks(is_save=True, is_draw=True, is_analyze=True, save_path="YOUR/FILE/PATH")
+ts.run()
+
+# set is_save=True
+```
+
+_在 taiwan_stocks folder 底下建立自己的 .env 檔案_
+```env
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=YOUR_PASSWORD
+DB_NAME=YOUR_DB_NAME
+
 ```
 
 ### 2. 如果沒有要存到 MySQL database，純爬蟲下來分析
 
 ```python
-db_settings = None
+import taiwan_stocks.taiwan_stocks as TS
 
-stocks = TS.Taiwan_Stocks( db_settings = None, Crawl_flag = True, MySQL_flag = False,
-                           Fetch_stock_statistics_flag = False, timesleep = 5)
-```
+# cawl stock data, save data into MySQL, fetch data from MySQL
+ts = TS.TaiwanStocks(is_save=False)
+ts.run()
 
-### 3. 如果 MySQL database 已有資料，純分析
-
-```python
-
-db_settings = { "host": "127.0.0.1",
-                "port": 3306,
-                "user": "root",
-                "password": "YOUR-PASSWORD-HERE!!",        <- 輸入你的資料庫密碼
-                "db": "YOUR-DATABASE-SCHEMA-NAME-HERE!!",  <- 輸入你創建的資料庫名字
-                "charset": "utf8" }
-
-stocks = TS.Taiwan_Stocks( db_settings = db_settings, Crawl_flag = False, MySQL_flag = False,
-                           Fetch_stock_statistics_flag = True, timesleep = 5)
+# set is_save=False
 ```
 
 ## Advanced statistics or plots
 
-### _皆使用 Stocks.py_
+### _使用 taiwan_stocks.py_
 
 ### _1. 畫出圖表 - 可繪製線圖、 繪製法人成交量、儲存成圖片_
 
 ```python
-stocks = TS.Taiwan_Stocks( db_settings = db_settings, Crawl_flag = True, MySQL_flag = True,
-                           Fetch_stock_statistics_flag = True, timesleep = 5)
+if self.is_draw:
+    ...
+    self.drawer.draw_plots(
+        K_plot=True,
+        volumn_plot=True,
+        D_5MA=True,
+        D_10MA=True,
+        D_20MA=True,
+        D_60MA=True,
+        D_IT=True,
+        D_FI=True,
+        D_DL=True,
+        save_fig=True,
+        file_name=f"{self.stock_name}-{self.stock_num}",
+        save_path=self.save_path,
+    )
 
-stocks.draw_plots( D_5MA=True, D_10MA = True, D_20MA = True, D_IT=True, D_FI=True, D_DL=True, save_fig=False,
-                   fig_name="", save_path="")
 
 參數解釋:
-
-- D_5MA     -> 是否繪製五日均線
-- D_10MA    -> 是否繪製十日均線
-- D_20MA    -> 是否繪製二十日均線
-- D_IT      -> 是否繪製投信成交量
-- D_FI      -> 是否繪製外資成交量
-- D_DL      -> 是否繪製自營商成交量
-- save_fig  -> 是否存取圖
-- fig_name  -> 圖的名稱
-- save_path -> 存圖的路徑
+- K_plot      -> 是否繪製 k 線圖
+- volumn_plot -> 是否繪製成交量
+- D_5MA       -> 是否繪製五日均線
+- D_10MA      -> 是否繪製十日均線
+- D_20MA      -> 是否繪製二十日均線
+- D_IT        -> 是否繪製投信成交量
+- D_FI        -> 是否繪製外資成交量
+- D_DL        -> 是否繪製自營商成交量
+- save_fig    -> 是否存取圖
+- fig_name    -> 圖的名稱
+- save_path   -> 存圖的路徑
 ```
 
-- 繪製線圖
+- 儲存成圖片: 在 _run.py 調整參數_
 
 ```python
-stocks.draw_plots( D_5MA=True, D_10MA = True, D_20MA = True, D_IT=False, D_FI=False, D_DL=False,
-                   save_fig=False, fig_name="", save_path="")
+import taiwan_stocks.taiwan_stocks as TS
 
-```
+# cawl stock data, save data into MySQL, fetch data from MySQL
+ts = TS.TaiwanStocks(is_save=True, 
+save_path="YOUR/FILE/PATH")
 
-- 繪製法人成交量
-
-```python
-stocks.draw_plots( D_5MA=True, D_10MA = True, D_20MA = True, D_IT=True, D_FI=True, D_DL=True,
-                   save_fig=False, fig_name="", save_path="")
-
-```
-
-- 儲存成圖片
-
-```python
-stocks.draw_plots( D_5MA=True, D_10MA = True, D_20MA = True, D_IT=True, D_FI=True, D_DL=True,
-                   save_fig=True, fig_name="XXX",save_path="C:/Users/GitHub_projects/Side_project_1.stocks")
+# set is_save = True
+# set save_path = "YOUR/FILE/PATH/HERE"
 
 ```
 
 ### _2. 買賣策略 - ( Algorithm )_
 
-_Hint : 皆在 Stocks.py 裡操作_
+_Hint : 皆在 run.py 裡操作_
 
 1.  短線 - 針對站上 5MA、10MA、20MA 的三陽開泰型股票進行買進
 
 ```python
-stocks.Stand_Up_On_MAs()
+import taiwan_stocks.taiwan_stocks as TS
+
+# cawl stock data, save data into MySQL, fetch data from MySQL
+ts = TS.TaiwanStocks(is_save=True, is_draw=True, is_analyze=True, save_path="YOUR/FILE/PATH")
+ts.run()
+ts.stand_up_on_MAs()
 ```
 
 2.  中長線 - 針對站上 5MA、10MA、20MA、60MA 的四海遊龍型股票進行買進
 
 ```python
-stocks.Stand_Up_On_MAs()
+import taiwan_stocks.taiwan_stocks as TS
+
+# cawl stock data, save data into MySQL, fetch data from MySQL
+ts = TS.TaiwanStocks(is_save=True, is_draw=True, is_analyze=True, save_path="YOUR/FILE/PATH")
+ts.run()
+ts.stand_up_on_MAs()
 ```
 
 3.  針對法人現金流向而做的買賣策略
@@ -166,6 +173,15 @@ stocks.Stand_Up_On_MAs()
 _Hint : 這邊的選股策略只是我個人的一些研究心得，請勿依據此心得而操作股票，這些策略也不是作為或被視為買入或出售該股票的邀請或意向_
 
 ## Updates
+
+### 2025-04-27:
+
+- 大幅度修正 code structure, logic 讓專案變得 readable and structural
+- 大量修正原本的 class names, function names, parameter names
+- 修正原本的專案結構, 讓多個 componebt decouple
+- 新增 poetry manage project
+- 新增 ruff to make the code style consistent
+- 新增 cli, 讓大家能直接安裝完無腦使用 taiwan-stocks package
 
 ### 2021-07-27:
 
