@@ -1,139 +1,117 @@
 import traceback
 
 import pandas as pd
-import pymysql
+from sqlalchemy import CHAR, Column, MetaData, Table, and_, create_engine, delete, text
+from sqlalchemy.exc import SQLAlchemyError
+
+from taiwan_stocks.config import DBConfig
 
 
-class MySQL:
-    def __init__(self, db_settings, **kwargs):
-        # Initialization
-        self.db_settings = db_settings
-        self.table_sql = f"""CREATE TABLE `{self.table_name}` (
-                            `Date` int(10) NOT NULL AUTO_INCREMENT,
-                            `證券代號` char(20) NOT NULL,
-                            `證券名稱` char(20) NOT NULL,
-                            `成交股數` char(100) DEFAULT NULL,
-                            `成交筆數` char(100) DEFAULT NULL,
-                            `成交金額` char(100) DEFAULT NULL,
-                            `開盤價` char(100) NOT NULL,
-                            `最高價` char(100) NOT NULL,
-                            `最低價` char(100) NOT NULL,
-                            `收盤價` char(100) NOT NULL,
-                            `漲跌(+/-)` char(100) DEFAULT NULL,
-                            `漲跌價差` char(100) NOT NULL,
-                            `外陸資買進股數(不含外資自營商)` char(100) DEFAULT NULL ,
-                            `外陸資賣出股數(不含外資自營商)` char(100) DEFAULT NULL ,
-                            `外陸資買賣超股數(不含外資自營商)` char(100) DEFAULT NULL ,
-                            `外資自營商買進股數` char(100) DEFAULT NULL ,
-                            `外資自營商賣出股數` char(100) DEFAULT NULL ,
-                            `外資自營商買賣超股數` char(100) DEFAULT NULL ,
-                            `投信買進股數` char(100) DEFAULT NULL ,
-                            `投信賣出股數` char(100) DEFAULT NULL ,
-                            `投信買賣超股數` char(100) DEFAULT NULL ,
-                            `自營商買賣超股數` char(100) DEFAULT NULL ,
-                            `自營商買進股數(自行買賣)` char(100) DEFAULT NULL ,
-                            `自營商賣出股數(自行買賣)` char(100) DEFAULT NULL ,
-                            `自營商買賣超股數(自行買賣)` char(100) DEFAULT NULL ,
-                            `自營商買進股數(避險)` char(100) DEFAULT NULL ,
-                            `自營商賣出股數(避險)` char(100) DEFAULT NULL ,
-                            `自營商買賣超股數(避險)` char(100) DEFAULT NULL ,
-                            `三大法人買賣超股數` char(100) DEFAULT NULL ,
-                            `本益比` char(20) DEFAULT NULL,
-                            `股價淨值比` char(20) DEFAULT NULL,
-                            `殖利率` char(20) DEFAULT NULL,
-                            `股利年度` char(20) DEFAULT NULL,
-                        PRIMARY KEY (`Date`)
-                        ) ENGINE=InnoDB DEFAULT CHARSET=utf8;"""
-        self.db = None
-        self.cursor = None
+class StockDatabase:
+    def __init__(self, **kwargs):
+        self.config = DBConfig()
+        self.engine = create_engine(self.config.url)
+        self.metadata = MetaData()
+        self.table_name = kwargs["table_name"]
+        self.stock_table = Table(
+            self.table_name,
+            self.metadata,
+            Column("Date", CHAR(20), primary_key=True),
+            Column("證券代號", CHAR(20), nullable=False),
+            Column("證券名稱", CHAR(20), nullable=False),
+            Column("成交股數", CHAR(100)),
+            Column("成交筆數", CHAR(100)),
+            Column("成交金額", CHAR(100)),
+            Column("開盤價", CHAR(100), nullable=False),
+            Column("最高價", CHAR(100), nullable=False),
+            Column("最低價", CHAR(100), nullable=False),
+            Column("收盤價", CHAR(100), nullable=False),
+            Column("漲跌(+/-)", CHAR(100), nullable=True),
+            Column("漲跌價差", CHAR(100), nullable=True),
+            Column("外陸資買進股數(不含外資自營商)", CHAR(100)),
+            Column("外陸資賣出股數(不含外資自營商)", CHAR(100)),
+            Column("外陸資買賣超股數(不含外資自營商)", CHAR(100)),
+            Column("外資自營商買進股數", CHAR(100)),
+            Column("外資自營商賣出股數", CHAR(100)),
+            Column("外資自營商買賣超股數", CHAR(100)),
+            Column("投信買進股數", CHAR(100)),
+            Column("投信賣出股數", CHAR(100)),
+            Column("投信買賣超股數", CHAR(100)),
+            Column("自營商買賣超股數", CHAR(100)),
+            Column("自營商買進股數(自行買賣)", CHAR(100)),
+            Column("自營商賣出股數(自行買賣)", CHAR(100)),
+            Column("自營商買賣超股數(自行買賣)", CHAR(100)),
+            Column("自營商買進股數(避險)", CHAR(100)),
+            Column("自營商賣出股數(避險)", CHAR(100)),
+            Column("自營商買賣超股數(避險)", CHAR(100)),
+            Column("三大法人買賣超股數", CHAR(100)),
+            Column("本益比", CHAR(20)),
+            Column("股價淨值比", CHAR(20)),
+            Column("殖利率(%)", CHAR(20)),
+            Column("股利年度", CHAR(20)),
+            Column("財報年/季", CHAR(20)),
+            mysql_charset="utf8",
+            mysql_engine="InnoDB",
+        )
 
-        print("\n  {}".format("(4) Manipulating the data"))
-        print("----------------------------------------\n")
+        assert self.config is not None, "Error: the database settings is empty!!"
+        # create a table
+        self.metadata.create_all(self.engine)
 
-        assert self.db_settings is not None, "Error: the database settings is empty!!"
-        self.open_connection()
-        self.create_cursor()
-
-        # Create a table
-        if self.check_if_table_exist():
-            self.create_table()
-
-    def open_connection(self):
+    def fetch_df(self, df: pd.DataFrame) -> pd.DataFrame:
         try:
-            self.db = pymysql.connect(**self.db_settings)
-            self.cursor = self.db.cursor()
-            print("MySQL Connected...")
-        except Exception as err:
-            print("Error connecting to MySQL:", err)
+            df = pd.read_sql_table(self.table_name, con=self.engine)
+            return df
+        except SQLAlchemyError as e:
+            print(f"Fetch failed: {e}")
+            return pd.DataFrame()
 
-    def create_cursor(self):
-        # prepare a cursor object using cursor() method
-        self.cursor = self.db.cursor()
+    def insert_df(self, df: pd.DataFrame) -> None:
+        # map column names to safe parameter names, col_0, col_1...
+        # avoid the (+/-) and (%) sql syntax issue
+        columns = df.columns.tolist()
+        safe_columns = {col: f"col_{i}" for i, col in enumerate(columns)}
 
-    def create_table(self):
-        self.cursor.execute(self.table_sql)
-        print("MySQL table created Successfully...")
+        col_str = ", ".join(f"`{col}`" for col in columns)
+        val_str = ", ".join(f":{safe_columns[col]}" for col in columns)
 
-    def check_if_table_exist(self):
-        # drop table if it already exist, using execute() method.
-        check_table_sql = "SHOW TABLES"
+        sql = text(f"REPLACE INTO `{self.table_name}` ({col_str}) VALUES ({val_str})")
 
-        self.cursor.execute(check_table_sql)
-        results = self.cursor.fetchall()
-        tables = [item[0] for item in results]
-
-        if self.table_name in tables:
-            print("This table already exists...")
-            return False
-        else:
-            print("This table does not exist, creating table...")
-            return True
-
-    def insert(self, insert_sql):
         try:
-            self.cursor.execute(insert_sql)
-            self.db.commit()
-            print("Insert successfully.")
-        except:  # noqa: E722
-            self.db.rollback()
-            traceback.print_exc()
+            with self.engine.begin() as conn:
+                for _, row in df.iterrows():
+                    # map row keys to safe ones
+                    row_dict = row.to_dict()
+                    safe_row_dict = {safe_columns[k]: v for k, v in row_dict.items()}
+                    conn.execute(sql, safe_row_dict)
+            print("Data inserted successfully.")
+        except SQLAlchemyError as e:
+            print(f"Insert failed: {e}")
 
-    def delete(self, delete_sql):
+    def delete(self, stock_id: str, target_date: str) -> None:
         try:
-            # Execute the SQL command
-            self.cursor.execute(delete_sql)
-            # Commit your changes in the database
-            self.db.commit()
-            print("Delete successfully.")
-        except:  # noqa: E722
-            self.db.rollback()
-            traceback.print_exc()
-
-    def fetch(self, fetch_sql):
-        # 使用者有可能原本用完後關掉db connect，然後再次使用fetch功能，因此要先連結
-        self.open_connection()
-        self.create_cursor()
-        try:
-            # Execute the SQL command
-            self.cursor.execute(fetch_sql)
-            # Fetch all the rows in a list of lists.
-            results = self.cursor.fetchall()
-
-            for idx, row in enumerate(results):
-                print(f"row-{idx} data: {row}")
-        except:  # noqa: E722
+            stmt = delete(self.stock_table).where(
+                and_(
+                    self.stock_table.c.Date == target_date,
+                    self.stock_table.c["證券代號"] == stock_id,
+                )
+            )
+            with self.engine.begin() as conn:
+                conn.execute(stmt)
+            print(f"Deleted records where 證券代號 = {stock_id} and Date = {target_date}")
+        except SQLAlchemyError:
+            print("Delete failed.")
             traceback.print_exc()
 
     def fetch_stock_statistics(self):
         print("Fetching stocks statistics...")
-        # 使用者有可能原本用完後關掉db connect，然後再次使用Fetch功能，因此要先連結
-        self.open_connection()
-        self.create_cursor()
 
         # 使用connect指定的Mysql獲取資料
-        self.df_stocks = pd.read_sql(f"SELECT * FROM stocks.{self.table_name}", con=self.db)
+        self.df_stocks = pd.read_sql(
+            f"SELECT * FROM stocks.{self.table_name}", con=self.engine.begin()
+        )
         self.df_institutional_investors = pd.read_sql(
-            f"SELECT * FROM stocks.{self.table_name}", con=self.db
+            f"SELECT * FROM stocks.{self.table_name}", con=self.engine.begin()
         )
 
         # 先把Date的部分轉回str，不然後面畫圖會出錯
@@ -169,5 +147,5 @@ class MySQL:
         self.df_stocks.reset_index(drop=True, inplace=True)
         self.df_institutional_investors.reset_index(drop=True, inplace=True)
 
-    def close_db(self):
-        self.db.close()
+    def close(self):
+        self.engine.dispose()
