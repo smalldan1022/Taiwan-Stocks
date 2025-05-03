@@ -12,7 +12,7 @@
 
 ![image](https://github.com/smalldan1022/Taiwan-Stocks/blob/main/pictures/Stocks.png)
 
-- 此為示意圖，雖然最下面的日期數字是直行，但用此程式會在 chrome 端直接開一個 local page 秀出這張圖表，滑鼠游標點上去會有相關的日期，非常方便。
+- 此為示意圖，雖然最下面的日期數字是直行，但滑鼠游標點上去會有相關的日期，非常方便。
 
 ### 資料來源:
 
@@ -55,26 +55,28 @@ taiwan-stocks --stock-num 2330 --start-date 20240101 --end-date 20240110 --save 
 
 ### 1. 如果要存到 MySQL database
 
-_在 run.py 修改 is_save 參數_
-```python
-import taiwan_stocks.taiwan_stocks as TS
+- _在 run.py 修改 is_save 參數_
 
-# cawl stock data, save data into MySQL, fetch data from MySQL
-ts = TS.TaiwanStocks(is_save=True, is_draw=True, is_analyze=True, save_path="YOUR/FILE/PATH")
-ts.run()
+    ```python
+    import taiwan_stocks.taiwan_stocks as TS
 
-# set is_save=True
-```
+    # cawl stock data, save data into MySQL, fetch data from MySQL
+    ts = TS.TaiwanStocks(is_save=True, is_draw=True, is_analyze=True, save_path="YOUR/FILE/PATH")
+    ts.run()
 
-_在 taiwan_stocks folder 底下建立自己的 .env 檔案_
-```env
-DB_HOST=localhost
-DB_PORT=3306
-DB_USER=root
-DB_PASSWORD=YOUR_PASSWORD
-DB_NAME=YOUR_DB_NAME
+    # set is_save = True
+    ```
 
-```
+- _在 taiwan_stocks folder 底下建立自己的 .env 檔案_
+
+    ```env
+    DB_HOST=localhost
+    DB_PORT=3306
+    DB_USER=root
+    DB_PASSWORD=YOUR_PASSWORD
+    DB_NAME=YOUR_DB_NAME
+
+    ```
 
 ### 2. 如果沒有要存到 MySQL database，純爬蟲下來分析
 
@@ -94,52 +96,53 @@ ts.run()
 
 ### _1. 畫出圖表 - 可繪製線圖、 繪製法人成交量、儲存成圖片_
 
-```python
-if self.is_draw:
-    ...
-    self.drawer.draw_plots(
-        K_plot=True,
-        volumn_plot=True,
-        D_5MA=True,
-        D_10MA=True,
-        D_20MA=True,
-        D_60MA=True,
-        D_IT=True,
-        D_FI=True,
-        D_DL=True,
-        save_fig=True,
-        file_name=f"{self.stock_name}-{self.stock_num}",
-        save_path=self.save_path,
-    )
+- 在 _taiwan_stocks.py_ 裡面
+
+    ```python
+    if self.is_draw:
+        ...
+        self.drawer.draw_plots(
+            K_plot=True,
+            volumn_plot=True,
+            D_5MA=True,
+            D_10MA=True,
+            D_20MA=True,
+            D_60MA=True,
+            D_IT=True,
+            D_FI=True,
+            D_DL=True,
+            save_fig=True,
+            file_name=f"{self.stock_name}-{self.stock_num}",
+            save_path=self.save_path,
+        )
 
 
-參數解釋:
-- K_plot      -> 是否繪製 k 線圖
-- volumn_plot -> 是否繪製成交量
-- D_5MA       -> 是否繪製五日均線
-- D_10MA      -> 是否繪製十日均線
-- D_20MA      -> 是否繪製二十日均線
-- D_IT        -> 是否繪製投信成交量
-- D_FI        -> 是否繪製外資成交量
-- D_DL        -> 是否繪製自營商成交量
-- save_fig    -> 是否存取圖
-- fig_name    -> 圖的名稱
-- save_path   -> 存圖的路徑
-```
+    參數解釋:
+    - K_plot      -> 是否繪製 k 線圖
+    - volumn_plot -> 是否繪製成交量
+    - D_5MA       -> 是否繪製五日均線
+    - D_10MA      -> 是否繪製十日均線
+    - D_20MA      -> 是否繪製二十日均線
+    - D_IT        -> 是否繪製投信成交量
+    - D_FI        -> 是否繪製外資成交量
+    - D_DL        -> 是否繪製自營商成交量
+    - save_fig    -> 是否存取圖
+    - fig_name    -> 圖的名稱
+    - save_path   -> 存圖的路徑
+    ```
 
 - 儲存成圖片: 在 _run.py 調整參數_
 
-```python
-import taiwan_stocks.taiwan_stocks as TS
+    ```python
+    import taiwan_stocks.taiwan_stocks as TS
 
-# cawl stock data, save data into MySQL, fetch data from MySQL
-ts = TS.TaiwanStocks(is_save=True, 
-save_path="YOUR/FILE/PATH")
+    # cawl stock data, save data into MySQL, fetch data from MySQL
+    ts = TS.TaiwanStocks(is_save=True, save_path="YOUR/FILE/PATH")
 
-# set is_save = True
-# set save_path = "YOUR/FILE/PATH/HERE"
+    # set is_save = True
+    # set save_path = "YOUR/FILE/PATH/HERE"
 
-```
+    ```
 
 ### _2. 買賣策略 - ( Algorithm )_
 
@@ -147,28 +150,28 @@ _Hint : 皆在 run.py 裡操作_
 
 1.  短線 - 針對站上 5MA、10MA、20MA 的三陽開泰型股票進行買進
 
-```python
-import taiwan_stocks.taiwan_stocks as TS
+    ```python
+    import taiwan_stocks.taiwan_stocks as TS
 
-# cawl stock data, save data into MySQL, fetch data from MySQL
-ts = TS.TaiwanStocks(is_save=True, is_draw=True, is_analyze=True, save_path="YOUR/FILE/PATH")
-ts.run()
-ts.stand_up_on_MAs()
-```
+    # cawl stock data, save data into MySQL, fetch data from MySQL
+    ts = TS.TaiwanStocks(is_save=True, is_draw=True, is_analyze=True, save_path="YOUR/FILE/PATH")
+    ts.run()
+    ts.stand_up_on_MAs()
+    ```
 
 2.  中長線 - 針對站上 5MA、10MA、20MA、60MA 的四海遊龍型股票進行買進
 
-```python
-import taiwan_stocks.taiwan_stocks as TS
+    ```python
+    import taiwan_stocks.taiwan_stocks as TS
 
-# cawl stock data, save data into MySQL, fetch data from MySQL
-ts = TS.TaiwanStocks(is_save=True, is_draw=True, is_analyze=True, save_path="YOUR/FILE/PATH")
-ts.run()
-ts.stand_up_on_MAs()
-```
+    # cawl stock data, save data into MySQL, fetch data from MySQL
+    ts = TS.TaiwanStocks(is_save=True, is_draw=True, is_analyze=True, save_path="YOUR/FILE/PATH")
+    ts.run()
+    ts.stand_up_on_MAs()
+    ```
 
 3.  針對法人現金流向而做的買賣策略
-    - 曾經以此選股方式在今年三月選到 IC 設計飆股-天鈺
+    - 曾經以此選股方式在 2021年3月選到 IC 設計飆股-天鈺
 
 _Hint : 這邊的選股策略只是我個人的一些研究心得，請勿依據此心得而操作股票，這些策略也不是作為或被視為買入或出售該股票的邀請或意向_
 
